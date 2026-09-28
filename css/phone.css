@@ -1,0 +1,630 @@
+/* =========================================================
+   DEVICE — assets/illustrations/blank-phone-screen.png
+   Loaded after hud.css.
+
+   Replaces the two CSS-drawn phone chassis (the shared .mission-phone used by
+   the clue hunt, test lab, retest and final mission, and the dashboard's
+   .chat-phone-shell) with the rendered device.
+
+   Geometry measured off the artwork, not eyeballed — the screen is a flat
+   rgb(3,32,53) region, so its bounds are exact:
+
+     image        1024 x 1536
+     screen rect  x 191, y 96, 642 x 1334
+                  = left 18.65%  top 6.25%  width 62.70%  height 86.85%
+
+   The device box is locked to the image's 1024:1536 aspect and the artwork is
+   stretched edge to edge (100% 100%), so those four percentages address the
+   screen exactly at every size.
+
+   The rendered screen is 1:2.078 where the old CSS one was 1:1.36, so the chat
+   column is materially narrower. Everything inside it is therefore sized from
+   --phone-h rather than in fixed px, so the whole screen scales as one piece
+   instead of drifting out of proportion.
+   ========================================================= */
+
+:root{
+  --phone-img:url("../assets/illustrations/blank-phone-screen.png");
+  --phone-screen-left:18.65%;
+  --phone-screen-top:6.25%;
+  --phone-screen-width:62.70%;
+  --phone-screen-height:86.85%;
+  /* screen corner radius: ~55px of the 1536-tall artwork */
+  --phone-screen-radius:0.0358;
+}
+
+
+/* =========================================================
+   Shared mission phone
+   ========================================================= */
+
+#app:not(.is-pre-game) .mission-phone{
+  /*
+    Cap moved 560 -> 620. The play-height term is untouched, so screens that
+    were already filling the stage are unchanged; the gain lands on tall
+    displays where the old cap left the device small for a Grade-6 audience.
+
+    620 and not higher: --fnd-play-height is NOT the bound here. This phone
+    shares a row with the analysis panel, and on a tall display that row is
+    sized by the panel's content (~641px at 1080p) rather than by the stage,
+    so a play-height cap let the device overrun the row and the row's
+    overflow:hidden cropped it. 620 clears the row with room to spare, and
+    the phone-clip check across six resolutions confirms it.
+  */
+  --phone-h:min(620px, var(--fnd-play-height));
+
+  height:var(--phone-h);
+  width:calc(var(--phone-h) * 0.6666667);   /* 1024 / 1536 */
+  max-height:var(--fnd-play-height);
+  min-height:0;
+  margin-inline:auto;
+  align-self:center;
+  position:relative;
+
+  /* the device is the artwork now — drop the drawn chassis entirely */
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:var(--phone-img) 0 0 / 100% 100% no-repeat;
+  box-shadow:none;
+}
+
+/* Notch, side buttons and screen gloss are all painted into the render. */
+#app:not(.is-pre-game) .mission-phone::before,
+#app:not(.is-pre-game) .mission-phone::after,
+#app:not(.is-pre-game) .mission-phone > .mission-phone-notch{
+  content:none;
+  display:none;
+}
+
+/*
+  Panel behind the device, so every activity screen reads the way Build
+  Detector V1 does: the device sits ON something rather than floating on the
+  room art. Same plate as the Figma card (node 907:3164) that the analysis
+  panel opposite it uses, so the two columns match.
+
+  Drawn as ::after with z-index:-1 rather than a wrapper element, which keeps
+  it out of the markup and out of the chunk renderers. .detector-phone is
+  excluded because chunk 4 already puts that device inside a real panel — it
+  would otherwise sit on two.
+*/
+#app:not(.is-pre-game) .mission-phone:not(.detector-phone)::after{
+  content:"";
+  display:block;
+  position:absolute;
+  /*
+    styles.css still sizes this pseudo as the old CSS-drawn side button
+    (width:6px; height:70px). Those must be cleared explicitly — with a fixed
+    width and height the box is over-constrained and `inset` cannot resolve,
+    which left the plate rendering as a 6x70 sliver.
+  */
+  width:auto;
+  height:auto;
+  /* the artwork carries ~14% transparent margin side to side but only ~4%
+     top to bottom, so the plate is pulled in horizontally and out vertically
+     to sit an even distance from the visible device */
+  inset:-4.5% -3%;
+  z-index:-1;
+  border-radius:var(--fnd-card-radius,29.635px);
+  background:linear-gradient(156.16deg, #1a3c8d 5.3232%, #071848 97.378%);
+  box-shadow:
+    inset 0 var(--fnd-card-edge-w,5.154px) 0 0 var(--fnd-card-edge,#fdae35),
+    0 18px 40px rgba(0,4,15,.45);
+  pointer-events:none;
+}
+
+#app:not(.is-pre-game) .mission-phone-screen{
+  position:absolute;
+  left:var(--phone-screen-left);
+  top:var(--phone-screen-top);
+  width:var(--phone-screen-width);
+  height:var(--phone-screen-height);
+  min-height:0;
+  border-radius:calc(var(--phone-h) * var(--phone-screen-radius));
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  box-shadow:none;
+}
+
+#app:not(.is-pre-game) .mission-phone-screen::after{ display:none; }
+
+/* --- Inside the screen: everything scales from the device height ---------- */
+
+#app:not(.is-pre-game) .mission-phone-status{
+  flex:0 0 auto;
+  padding:calc(var(--phone-h) * 0.010) calc(var(--phone-h) * 0.024) calc(var(--phone-h) * 0.006);
+  font-size:max(9.5px, calc(var(--phone-h) * 0.0205));
+}
+
+#app:not(.is-pre-game) .mission-phone-header{
+  flex:0 0 auto;
+  gap:calc(var(--phone-h) * 0.012);
+  padding:calc(var(--phone-h) * 0.013) calc(var(--phone-h) * 0.018);
+}
+#app:not(.is-pre-game) .mission-phone-back{ font-size:calc(var(--phone-h) * 0.044); }
+#app:not(.is-pre-game) .mission-phone-avatar{
+  width:calc(var(--phone-h) * 0.058);
+  height:calc(var(--phone-h) * 0.058);
+  flex:0 0 auto;
+}
+#app:not(.is-pre-game) .mission-phone-avatar svg{
+  width:calc(var(--phone-h) * 0.034);
+  height:calc(var(--phone-h) * 0.034);
+}
+#app:not(.is-pre-game) .mission-phone-contact strong{ font-size:max(10.5px, calc(var(--phone-h) * 0.0245)); }
+#app:not(.is-pre-game) .mission-phone-contact small{ font-size:max(9px, calc(var(--phone-h) * 0.019)); }
+#app:not(.is-pre-game) .mission-phone-menu{ font-size:calc(var(--phone-h) * 0.024); }
+
+/*
+  The body is a flex column, so a bubble taller than the remaining space was
+  being shrunk and its own last child (the timestamp) spilled out onto the
+  input bar. The bubble keeps its intrinsic height instead, and the body
+  scrolls as a safety net — chromeless, so the device still reads as a phone.
+*/
+#app:not(.is-pre-game) .mission-phone-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  gap:calc(var(--phone-h) * 0.007);
+  padding:calc(var(--phone-h) * 0.010) calc(var(--phone-h) * 0.014) calc(var(--phone-h) * 0.010);
+}
+#app:not(.is-pre-game) .mission-phone-body::-webkit-scrollbar{ width:0; height:0; display:none; }
+
+#app:not(.is-pre-game) .mission-chat-bubble{ flex:0 0 auto; }
+#app:not(.is-pre-game) .mission-phone-day,
+#app:not(.is-pre-game) .mission-forwarded{ flex:0 0 auto; }
+
+#app:not(.is-pre-game) .mission-phone-day{
+  padding:calc(var(--phone-h) * 0.005) calc(var(--phone-h) * 0.016);
+  font-size:max(9px, calc(var(--phone-h) * 0.0185));
+}
+#app:not(.is-pre-game) .mission-forwarded{
+  font-size:max(9px, calc(var(--phone-h) * 0.0195));
+  margin:0 calc(var(--phone-h) * 0.012) 0;
+}
+
+#app:not(.is-pre-game) .mission-chat-bubble{
+  padding:calc(var(--phone-h) * 0.014) calc(var(--phone-h) * 0.018) calc(var(--phone-h) * 0.010);
+  gap:calc(var(--phone-h) * 0.007);
+  border-radius:calc(var(--phone-h) * 0.024);
+  min-height:0;
+}
+#app:not(.is-pre-game) .mission-chat-bubble h3{
+  font-size:max(12.5px, calc(var(--phone-h) * 0.0295));
+  line-height:1.1;
+}
+#app:not(.is-pre-game) .mission-chat-bubble p{
+  font-size:max(11px, calc(var(--phone-h) * 0.0255));
+  line-height:1.32;
+}
+#app:not(.is-pre-game) .mission-chat-time{ font-size:max(8.5px, calc(var(--phone-h) * 0.0175)); }
+
+#app:not(.is-pre-game) .phone-meta-wrap{ gap:calc(var(--phone-h) * 0.008); }
+#app:not(.is-pre-game) .phone-meta-chip{
+  padding:calc(var(--phone-h) * 0.007) calc(var(--phone-h) * 0.011);
+  font-size:max(8.5px, calc(var(--phone-h) * 0.0165));
+  line-height:1.15;
+}
+#app:not(.is-pre-game) .phone-attachment{
+  max-height:calc(var(--phone-h) * 0.26);
+}
+
+#app:not(.is-pre-game) .mission-phone-input{
+  flex:0 0 auto;
+  margin-top:auto;
+  position:sticky;
+  bottom:0;
+  padding:calc(var(--phone-h) * 0.010) calc(var(--phone-h) * 0.016);
+  font-size:calc(var(--phone-h) * 0.020);
+}
+#app:not(.is-pre-game) .mission-phone-input b{
+  width:calc(var(--phone-h) * 0.040);
+  height:calc(var(--phone-h) * 0.040);
+  position:relative;
+}
+/* The send arrow was drawn with fixed 6/10px borders, so at the smaller
+   device it spilled out of its own circle as a white wedge. */
+#app:not(.is-pre-game) .mission-phone-input b::after{
+  left:38%;
+  top:28%;
+  border-top-width:calc(var(--phone-h) * 0.0075);
+  border-bottom-width:calc(var(--phone-h) * 0.0075);
+  border-left-width:calc(var(--phone-h) * 0.0125);
+}
+
+/* Clue hunt: the tappable lines live inside the narrower screen now. */
+#app:not(.is-pre-game) .hunt-source{
+  padding:calc(var(--phone-h) * 0.007) calc(var(--phone-h) * 0.046) calc(var(--phone-h) * 0.007) calc(var(--phone-h) * 0.012);
+  border-radius:calc(var(--phone-h) * 0.018);
+}
+#app:not(.is-pre-game) .hunt-source strong{ font-size:max(10.5px, calc(var(--phone-h) * 0.0245)); }
+#app:not(.is-pre-game) .hunt-source small{ font-size:max(9px, calc(var(--phone-h) * 0.019)); }
+
+#app:not(.is-pre-game) .hunt-claim,
+#app:not(.is-pre-game) .hunt-pressure,
+#app:not(.is-pre-game) .hunt-clue.hunt-detail{
+  padding:calc(var(--phone-h) * 0.009) calc(var(--phone-h) * 0.044) calc(var(--phone-h) * 0.009) calc(var(--phone-h) * 0.012);
+  border-radius:calc(var(--phone-h) * 0.018);
+  font-size:max(11px, calc(var(--phone-h) * 0.0255));
+  line-height:1.32;
+}
+#app:not(.is-pre-game) .clue-message-copy{ gap:calc(var(--phone-h) * 0.008); }
+#app:not(.is-pre-game) .hunt-clue i{
+  right:calc(var(--phone-h) * 0.012);
+  width:calc(var(--phone-h) * 0.026);
+  height:calc(var(--phone-h) * 0.026);
+}
+#app:not(.is-pre-game) .hunt-clue.hunt-detail i{
+  right:calc(var(--phone-h) * 0.012);
+  width:calc(var(--phone-h) * 0.026);
+  height:calc(var(--phone-h) * 0.026);
+}
+
+
+/*
+  On the shortest supported screen the type floors win over the proportional
+  scale, so the message needs ~12px more than the screen has. The "Today"
+  separator is the only purely decorative row left — the forwarded tag and the
+  message itself both carry the lesson — so that is what gives way.
+*/
+@media (max-height:660px){
+  #app:not(.is-pre-game) .mission-phone .mission-phone-day{ display:none; }
+
+  /* and squeeze the last few px out of the gaps, never out of the text */
+  #app:not(.is-pre-game) .mission-phone .mission-chat-bubble{
+    padding:calc(var(--phone-h) * 0.010) calc(var(--phone-h) * 0.016) calc(var(--phone-h) * 0.007);
+    gap:calc(var(--phone-h) * 0.004);
+  }
+  #app:not(.is-pre-game) .mission-phone .clue-message-copy{ gap:calc(var(--phone-h) * 0.005); }
+  #app:not(.is-pre-game) .mission-phone .hunt-claim,
+  #app:not(.is-pre-game) .mission-phone .hunt-pressure,
+  #app:not(.is-pre-game) .mission-phone .hunt-clue.hunt-detail{
+    padding:calc(var(--phone-h) * 0.006) calc(var(--phone-h) * 0.044) calc(var(--phone-h) * 0.006) calc(var(--phone-h) * 0.012);
+  }
+}
+
+
+/* =========================================================
+   Dashboard phone (scene 3-4) — same device, same geometry
+
+   The HUD always reserves --game-bottom-nav-safe-height for the centred
+   action, but this scene never raises one: every choice on it (SEE FULL
+   MESSAGE, FORWARD / IGNORE, INSPECT) lives inside the device, so the bottom
+   strip stays empty and the rails stay at opacity 0 the whole way through.
+   The device is the thing being read here, so it is allowed to use that strip
+   — but only while no action is present, so if a later screen does raise one
+   the device steps back to the conservative size on its own.
+   ========================================================= */
+
+#app:not(.is-pre-game):has(.game-bottom-nav:not(.has-action)) .chat-phone-shell{
+  --phone-h:min(820px, calc(
+    var(--fnd-stage-height) + var(--game-bottom-nav-safe-height) - 90px
+  ));
+}
+
+/* ---------- Centring the device on this scene ----------
+   Three things held the device off-centre once it grew past the size the
+   dashboard was built around:
+
+     .dashboard-frame  capped at 460px while the device is now up to 547px
+                       wide, so the device overflowed its own column to the
+                       right — +43px at 1080p, which is what reads as skewed
+     .dashboard-row    aligns to flex-start, so the taller device ran downward
+                       out of the row instead of centring inside it
+     .scene            reserves the bottom-nav strip, which this scene never
+                       raises an action into
+
+   The welcome line is a caption for the device rather than a sibling that
+   should push it: taking it out of the column's height lets the device itself
+   sit on the centre line instead of the device-plus-caption block.
+
+   The row and scene changes are behind the same no-action guard as the size
+   above, so a screen that does raise a bottom action keeps the safe layout. */
+
+#app:not(.is-pre-game) .dashboard-scene .dashboard-frame{
+  width:auto;
+  max-width:92vw;
+  position:relative;
+}
+
+#app:not(.is-pre-game) .dashboard-scene .welcome-line{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:100%;
+  margin:0 0 clamp(6px,1.2vh,12px);
+}
+
+#app:not(.is-pre-game):has(.game-bottom-nav:not(.has-action)) .dashboard-scene{
+  padding-bottom:0;
+}
+#app:not(.is-pre-game):has(.game-bottom-nav:not(.has-action)) .dashboard-scene .dashboard-row{
+  align-items:center;
+  padding-top:0;
+}
+
+#app:not(.is-pre-game) .chat-phone-shell{
+  /* Conservative size, used whenever a bottom action is on screen. */
+  --phone-h:min(700px, calc(var(--fnd-stage-height) - 16px));
+
+  height:var(--phone-h);
+  width:calc(var(--phone-h) * 0.6666667);
+  min-height:0;
+  max-height:none;
+  margin-inline:auto;
+  position:relative;
+
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:var(--phone-img) 0 0 / 100% 100% no-repeat;
+  box-shadow:none;
+}
+
+#app:not(.is-pre-game) .chat-phone-shell::before,
+#app:not(.is-pre-game) .chat-phone-shell::after,
+#app:not(.is-pre-game) .chat-phone-shell > .chat-notch{
+  content:none;
+  display:none;
+}
+
+#app:not(.is-pre-game) .chat-screen{
+  position:absolute;
+  left:var(--phone-screen-left);
+  top:var(--phone-screen-top);
+  width:var(--phone-screen-width);
+  height:var(--phone-screen-height);
+  min-height:0;
+  border-radius:calc(var(--phone-h) * var(--phone-screen-radius));
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+}
+
+#app:not(.is-pre-game) .chat-statusbar{
+  flex:0 0 auto;
+  padding:calc(var(--phone-h) * 0.015) calc(var(--phone-h) * 0.024) calc(var(--phone-h) * 0.008);
+  font-size:max(9px, calc(var(--phone-h) * 0.0195));
+}
+#app:not(.is-pre-game) .chat-app-header{
+  flex:0 0 auto;
+  padding:calc(var(--phone-h) * 0.016) calc(var(--phone-h) * 0.020);
+}
+#app:not(.is-pre-game) .chat-back-btn{
+  width:calc(var(--phone-h) * 0.048);
+  height:calc(var(--phone-h) * 0.048);
+}
+#app:not(.is-pre-game) .chat-app-title{ font-size:max(10.5px, calc(var(--phone-h) * 0.0245)); }
+#app:not(.is-pre-game) .chat-app-subtitle{ font-size:max(9px, calc(var(--phone-h) * 0.019)); }
+
+/*
+  Same trap as the mission bubble: .full-message keeps overflow:hidden for its
+  reveal, so when the flex column shrank it, it silently cut the last line of
+  the notice and the signature. Nothing in the message column may shrink; the
+  body scrolls instead, chromeless.
+*/
+#app:not(.is-pre-game) .chat-body{
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+  gap:calc(var(--phone-h) * 0.009);
+  padding:calc(var(--phone-h) * 0.012) calc(var(--phone-h) * 0.016) calc(var(--phone-h) * 0.012);
+}
+#app:not(.is-pre-game) .chat-body::-webkit-scrollbar{ width:0; height:0; display:none; }
+
+#app:not(.is-pre-game) .chat-body > *,
+#app:not(.is-pre-game) .notification-card,
+#app:not(.is-pre-game) .full-message{ flex:0 0 auto; }
+
+/*
+  FORWARD / IGNORE is the whole point of this screen, so it has to be reachable
+  without scrolling the phone. The taller, narrower device does not have room
+  for the full notice AND the decorative chat furniture, so the furniture goes:
+  the "Today" separator always, and on short screens the standing safety note
+  too — Byte gives the learner the same instruction out loud either way.
+*/
+#app:not(.is-pre-game) .chat-phone-shell .chat-day-pill{ display:none; }
+
+@media (max-height:660px){
+  #app:not(.is-pre-game) .chat-phone-shell .chat-safety-note{ display:none; }
+  /* the card already carries a "Forwarded many times" tag, so this line is
+     saying the same thing twice for ~20px the buttons need */
+  #app:not(.is-pre-game) .chat-phone-shell .status-line{ display:none; }
+  #app:not(.is-pre-game) .chat-phone-shell .notification-card{
+    padding:calc(var(--phone-h) * 0.012);
+  }
+}
+#app:not(.is-pre-game) .chat-day-pill{
+  padding:calc(var(--phone-h) * 0.007) calc(var(--phone-h) * 0.019);
+  font-size:max(8.5px, calc(var(--phone-h) * 0.0175));
+}
+#app:not(.is-pre-game) .chat-safety-note{
+  padding:calc(var(--phone-h) * 0.011) calc(var(--phone-h) * 0.016);
+  font-size:max(8.5px, calc(var(--phone-h) * 0.0175));
+  line-height:1.3;
+}
+#app:not(.is-pre-game) .notification-card{
+  padding:calc(var(--phone-h) * 0.016);
+  border-radius:calc(var(--phone-h) * 0.022);
+}
+#app:not(.is-pre-game) .notification-title{ font-size:max(12px, calc(var(--phone-h) * 0.0275)); }
+#app:not(.is-pre-game) .notification-preview{ font-size:max(10.5px, calc(var(--phone-h) * 0.023)); line-height:1.32; }
+#app:not(.is-pre-game) .full-message h3{ font-size:max(12px, calc(var(--phone-h) * 0.0275)); }
+#app:not(.is-pre-game) .full-message p{ font-size:max(10.5px, calc(var(--phone-h) * 0.023)); line-height:1.34; }
+#app:not(.is-pre-game) .message-bubble-sender-name{ font-size:max(10px, calc(var(--phone-h) * 0.0215)); }
+#app:not(.is-pre-game) .message-bubble-forwarded{ font-size:max(8.5px, calc(var(--phone-h) * 0.0175)); }
+#app:not(.is-pre-game) .message-bubble-time{ font-size:calc(var(--phone-h) * 0.017); }
+/*
+  .btn-primary is capped at `width:min(260px,100%)` with a fixed 26px inline
+  padding. Inside the device the label scales with --phone-h but that box does
+  not, so on a large screen "SEE FULL MESSAGE" ran out of room and wrapped.
+  In here the button follows the device like everything else.
+*/
+#app:not(.is-pre-game) .decision-btn,
+#app:not(.is-pre-game) .chat-open-btn{
+  width:100%;
+  max-width:none;
+  min-width:0;
+  padding-inline:calc(var(--phone-h) * 0.022);
+}
+#app:not(.is-pre-game) .decision-btn{
+  min-height:calc(var(--phone-h) * 0.072);
+  font-size:max(10.5px, calc(var(--phone-h) * 0.0235));
+  border-radius:calc(var(--phone-h) * 0.020);
+}
+#app:not(.is-pre-game) .chat-open-btn{
+  min-height:calc(var(--phone-h) * 0.075);
+  font-size:calc(var(--phone-h) * 0.025);
+}
+#app:not(.is-pre-game) .decision-prompt{ font-size:calc(var(--phone-h) * 0.024); }
+#app:not(.is-pre-game) .status-line{ font-size:max(9px, calc(var(--phone-h) * 0.019)); }
+
+
+/* =========================================================
+   Build Detector V1 — the detector is assembled on the device
+   ========================================================= */
+
+/* The chunk-4 panel was a two-row grid built around a bare illustration.
+   With the device in it, the panel just centres one child. */
+#scene-chunk4 .detector-core-panel{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  /* Lets the device below size itself against this panel. The panel's own
+     size is definite (height:100% of the layout row, width from the grid
+     column), so it does not depend on its contents. */
+  container-type:size;
+  /* This panel is a frame around the device and nothing else, so it needs far
+     less padding than the rule panel it shares a declaration with — that space
+     goes to the device instead. */
+  padding:clamp(6px,0.9vh,10px);
+}
+
+#app:not(.is-pre-game) .detector-phone{
+  /*
+    Sized against the panel, not the play area — this panel is materially
+    shorter than --fnd-play-height (the mission head and grid gap take the
+    difference), so a play-height cap overflowed it and the panel's
+    overflow:hidden cropped the device.
+
+    The terms below are built on the artwork's real opaque bounds, measured
+    off blank-phone-screen.png rather than assumed:
+
+      image 1024 x 1536, device pixels span x 146-876, y 61-1468
+      => the device fills 71.4% of the image width and 91.7% of its height;
+         the remaining 28.6% / 8.3% is transparent padding around the glow.
+
+    Sizing the *element* to the panel therefore left the visible device far
+    smaller than the panel, which is what read as wrong. These terms size the
+    visible device instead, so it fills the panel and the only thing that can
+    ever fall outside is transparent padding:
+
+      visible height = --phone-h * 0.917          -> cap = 100cqh / 0.917
+      visible width  = --phone-h * 0.6667 * 0.714 -> cap = 100cqw / 0.4762
+
+    The 0.97 factor keeps a hair of breathing room inside the panel.
+  */
+  --phone-h:min(720px, calc(100cqh * 1.058), calc(100cqw * 2.037));
+  flex:0 0 auto;
+}
+
+#app:not(.is-pre-game) .detector-phone .mission-phone-screen{
+  background:linear-gradient(180deg,#0b1533 0%,#10204a 55%,#1a1740 100%);
+  gap:calc(var(--phone-h) * 0.012);
+  padding:calc(var(--phone-h) * 0.020) calc(var(--phone-h) * 0.022);
+}
+
+/* App bar, in place of the chat header */
+#app:not(.is-pre-game) .detector-app-bar{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  gap:calc(var(--phone-h) * 0.014);
+  padding:calc(var(--phone-h) * 0.012) calc(var(--phone-h) * 0.016);
+  border-radius:calc(var(--phone-h) * 0.016);
+  border:1px solid rgba(63,214,255,.32);
+  background:rgba(63,214,255,.09);
+  color:var(--cyan-300);
+  font-family:var(--font-display);
+  font-size:max(10px, calc(var(--phone-h) * 0.021));
+  letter-spacing:.06em;
+}
+#app:not(.is-pre-game) .detector-app-bar small{
+  margin-left:auto;
+  font-family:var(--font-body);
+  font-weight:900;
+  color:var(--ink-dim);
+  font-size:max(9px, calc(var(--phone-h) * 0.018));
+}
+#app:not(.is-pre-game) .detector-app-dot{
+  width:calc(var(--phone-h) * 0.016);
+  height:calc(var(--phone-h) * 0.016);
+  border-radius:50%;
+  background:var(--lime-400);
+  box-shadow:0 0 calc(var(--phone-h) * 0.016) rgba(166,255,107,.8);
+}
+
+/* The prototype art takes whatever height the slots leave. */
+#app:not(.is-pre-game) .detector-phone img{
+  flex:1 1 auto;
+  min-height:0;
+  width:100%;
+  max-height:calc(var(--phone-h) * 0.30);
+  object-fit:contain;
+}
+
+/* Three bays down the screen — side by side would be ~50px each on a
+   1024x576 tablet, below a usable touch target. */
+#app:not(.is-pre-game) .detector-phone .detector-load-slots{
+  flex:0 0 auto;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:calc(var(--phone-h) * 0.012);
+  width:100%;
+}
+#app:not(.is-pre-game) .detector-phone .detector-load-slot{
+  min-height:max(44px, calc(var(--phone-h) * 0.105));
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  justify-content:flex-start;
+  gap:calc(var(--phone-h) * 0.016);
+  padding:calc(var(--phone-h) * 0.010) calc(var(--phone-h) * 0.016);
+  border-radius:calc(var(--phone-h) * 0.018);
+  text-align:left;
+}
+#app:not(.is-pre-game) .detector-phone .detector-load-slot > span{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:calc(var(--phone-h) * 0.048);
+  height:calc(var(--phone-h) * 0.048);
+  font-size:max(10px, calc(var(--phone-h) * 0.022));
+}
+#app:not(.is-pre-game) .detector-phone .detector-load-slot > span svg{
+  width:calc(var(--phone-h) * 0.034);
+  height:calc(var(--phone-h) * 0.034);
+}
+#app:not(.is-pre-game) .detector-phone .detector-load-slot strong{
+  font-size:max(10.5px, calc(var(--phone-h) * 0.023));
+}
+#app:not(.is-pre-game) .detector-phone .detector-load-slot small{
+  font-size:max(8.5px, calc(var(--phone-h) * 0.017));
+  letter-spacing:.04em;
+}
+
+
+/* =========================================================
+   The scan sweep rides the screen, not the device box
+   ========================================================= */
+
+.fnd-scan-beam{ border-radius:inherit; }

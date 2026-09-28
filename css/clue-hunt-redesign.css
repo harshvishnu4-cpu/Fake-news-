@@ -1,0 +1,336 @@
+/* Focused, responsive treatment for the first investigation screen. */
+
+#scene-chunk2 .mission-workspace{
+  width:min(1180px, calc(100vw - var(--game-right-safe-width) - 36px));
+  gap:clamp(8px,1.25vh,13px);
+  padding:6px 10px 10px;
+}
+
+#scene-chunk2 .mission-head{
+  position:relative;
+  min-height:58px;
+  padding:10px 16px 10px 21px !important;
+  border:1px solid rgba(102,225,255,.34);
+  border-radius:18px;
+  background:linear-gradient(100deg,rgba(7,34,70,.94),rgba(11,27,69,.86));
+  box-shadow:0 12px 30px rgba(1,7,25,.25),inset 0 1px rgba(255,255,255,.08);
+  overflow:hidden;
+}
+
+#scene-chunk2 .mission-head::before{
+  content:"";
+  position:absolute;
+  inset:0 auto 0 0;
+  width:5px;
+  background:linear-gradient(180deg,var(--cyan-300),var(--cyan-400));
+  box-shadow:0 0 16px rgba(63,214,255,.65);
+}
+
+#scene-chunk2 .mission-head h2{
+  font-size:clamp(1.65rem,2.45vw,2.15rem);
+  letter-spacing:.015em;
+}
+
+#scene-chunk2 .mission-progress{
+  min-height:36px;
+  padding:6px 13px;
+  border-color:rgba(90,224,255,.42);
+  background:rgba(63,214,255,.1);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.03);
+}
+
+#scene-chunk2 .clue-hunt-layout{
+  grid-template-columns:minmax(285px,350px) minmax(470px,1fr);
+  align-items:stretch;
+  gap:clamp(18px,2.6vw,34px);
+  height:var(--fnd-play-height);
+  max-height:var(--fnd-play-height);
+}
+
+#scene-chunk2 .clue-hunt-phone{
+  --phone-h:min(600px,var(--fnd-play-height));
+  filter:drop-shadow(0 22px 25px rgba(0,4,18,.48));
+}
+
+#scene-chunk2 .clue-hunt-panel{
+  position:relative;
+  min-height:0;
+  height:100%;
+  padding:clamp(18px,2.5vh,25px);
+  gap:clamp(10px,1.45vh,15px);
+  border:1px solid rgba(111,151,255,.34);
+  background:
+    radial-gradient(circle at 94% 0,rgba(65,117,255,.2),transparent 32%),
+    linear-gradient(153deg,#173b86 0%,#0b245c 50%,#071743 100%);
+  box-shadow:
+    inset 0 5px 0 #fdae35,
+    inset 0 1px 0 rgba(255,255,255,.09),
+    0 24px 55px rgba(0,4,18,.42);
+}
+
+#scene-chunk2 .clue-hunt-panel::after{
+  content:"";
+  position:absolute;
+  inset:5px 0 auto;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);
+  pointer-events:none;
+}
+
+#scene-chunk2 .clue-hunt-head{gap:7px;}
+
+#scene-chunk2 .clue-hunt-kicker{
+  color:#93eaff;
+  font-family:var(--font-hud);
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.14em;
+}
+
+#app:not(.is-pre-game) #scene-chunk2 .clue-hunt-panel h3{
+  max-width:24ch;
+  font-size:clamp(1.45rem,2.25vw,2rem);
+  line-height:1.08;
+}
+
+#scene-chunk2 .clue-progress-row{
+  display:grid;
+  grid-template-columns:1fr auto;
+  align-items:center;
+  gap:12px;
+}
+
+#scene-chunk2 .clue-progress-row .scan-progress{
+  height:8px;
+  background:rgba(3,16,48,.48);
+  border:1px solid rgba(130,171,255,.13);
+}
+
+#scene-chunk2 .clue-progress-row .scan-progress span{
+  background:linear-gradient(90deg,#45d9ff,#a6ff6b);
+  box-shadow:0 0 12px rgba(63,214,255,.45);
+}
+
+#scene-chunk2 .clue-progress-row>strong{
+  min-width:34px;
+  color:#b9efff;
+  font-family:var(--font-hud);
+  font-size:.78rem;
+  text-align:right;
+}
+
+#scene-chunk2 .clue-hunt-goal{
+  gap:11px;
+  padding:10px 12px;
+  border:1px solid rgba(91,221,255,.18);
+  border-radius:14px;
+  background:rgba(5,18,53,.36);
+  color:#eef7ff;
+  font-size:.9rem;
+  font-weight:800;
+}
+
+#scene-chunk2 .clue-hunt-goal>b{
+  min-width:34px;
+  height:34px;
+  padding:0;
+  border:1px solid rgba(63,214,255,.55);
+  background:rgba(63,214,255,.13);
+}
+
+#scene-chunk2 .clue-hunt-goal>span{
+  display:flex;
+  flex-direction:column;
+  gap:1px;
+}
+
+#scene-chunk2 .clue-hunt-goal small{
+  color:#aebdde;
+  font-size:.7rem;
+  font-weight:700;
+}
+
+#scene-chunk2 .unlock-stack{gap:8px;}
+
+#scene-chunk2 .unlock-stack:not(.is-complete) .unlock-slot{
+  position:relative;
+  min-height:66px;
+  grid-template-columns:44px 1fr;
+  gap:12px;
+  padding:9px 13px;
+  border:1px solid rgba(125,155,225,.21);
+  border-radius:16px;
+  background:linear-gradient(100deg,rgba(24,55,122,.6),rgba(12,31,78,.55));
+  opacity:1;
+  overflow:hidden;
+}
+
+#scene-chunk2 .unlock-stack:not(.is-complete) .unlock-slot::after{
+  content:"";
+  position:absolute;
+  inset:0 0 0 auto;
+  width:3px;
+  background:rgba(99,129,207,.28);
+}
+
+#scene-chunk2 .unlock-stack:not(.is-complete) .unlock-slot.is-locked{border-style:solid;}
+
+#scene-chunk2 .unlock-stack:not(.is-complete) .unlock-icon{
+  width:42px;
+  height:42px;
+  border-radius:13px;
+  background:rgba(78,111,195,.18);
+  color:rgba(186,208,255,.56);
+}
+
+#scene-chunk2 .unlock-stack:not(.is-complete) .unlock-icon svg{
+  width:22px;
+  height:22px;
+}
+
+#scene-chunk2 .unlock-slot.is-locked strong{
+  color:#aab8db;
+  font-size:.82rem;
+  letter-spacing:.055em;
+}
+
+#scene-chunk2 .unlock-slot.is-locked small{
+  color:#7486b4;
+  font-size:.7rem;
+  line-height:1.25;
+}
+
+#scene-chunk2 .unlock-slot.is-unlocked{
+  border-color:rgba(166,255,107,.55);
+  background:linear-gradient(100deg,rgba(86,141,62,.25),rgba(15,58,69,.52));
+  box-shadow:inset 3px 0 0 #a6ff6b,0 10px 22px rgba(0,5,22,.17);
+}
+
+#scene-chunk2 .unlock-slot.is-unlocked::after{
+  background:#a6ff6b;
+  box-shadow:0 0 12px rgba(166,255,107,.45);
+}
+
+#scene-chunk2 .clue-byte-panel{
+  margin-top:auto;
+  align-items:stretch;
+  gap:10px;
+}
+
+#scene-chunk2 .clue-byte-panel .byte-mini-figure{
+  width:54px;
+  min-height:64px;
+  flex-basis:54px;
+  border-radius:14px;
+  background:#f9f2e8;
+  box-shadow:0 9px 22px rgba(0,4,18,.34),0 0 0 3px rgba(63,214,255,.08);
+}
+
+#scene-chunk2 .clue-byte-panel .byte-line-panel{
+  min-height:64px;
+  display:flex;
+  align-items:center;
+  padding:10px 14px;
+  border-color:rgba(116,144,242,.42);
+  background:rgba(4,13,47,.74);
+}
+
+#scene-chunk2 .clue-byte-panel .byte-line-panel p{
+  font-size:clamp(.9rem,1.25vw,1.05rem);
+  line-height:1.3;
+}
+
+#scene-chunk2 .hunt-clue{
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease,border-color .18s ease;
+}
+
+#scene-chunk2 .hunt-source:not(.is-found),
+#scene-chunk2 .hunt-claim:not(.is-found),
+#scene-chunk2 .hunt-pressure:not(.is-found){
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+}
+
+#scene-chunk2 .hunt-clue:not(.is-found):hover,
+#scene-chunk2 .hunt-clue:not(.is-found):focus-visible{
+  transform:translateY(-1px) scale(1.01);
+  box-shadow:0 5px 13px rgba(0,32,59,.18),inset 0 0 0 1px rgba(63,214,255,.35);
+}
+
+#scene-chunk2 .hunt-clue i{
+  width:12px;
+  height:12px;
+  right:9px;
+}
+
+@media (max-height:820px){
+  #scene-chunk2 .clue-hunt-panel{padding:16px;gap:8px;}
+  #scene-chunk2 .clue-hunt-head{gap:5px;}
+  #app:not(.is-pre-game) #scene-chunk2 .clue-hunt-panel h3{font-size:clamp(1.3rem,2.6vw,1.72rem);}
+  #scene-chunk2 .clue-hunt-goal{padding:7px 10px;}
+  #scene-chunk2 .clue-hunt-goal>b{min-width:30px;height:30px;}
+  #scene-chunk2 .unlock-stack{gap:6px;}
+  #scene-chunk2 .unlock-stack:not(.is-complete) .unlock-slot{min-height:56px;padding:7px 11px;}
+  #scene-chunk2 .clue-byte-panel .byte-mini-figure{width:48px;min-height:58px;flex-basis:48px;}
+  #scene-chunk2 .clue-byte-panel .byte-line-panel{min-height:58px;padding:8px 12px;}
+}
+
+@media (max-height:700px){
+  #scene-chunk2 .mission-workspace{gap:6px;padding-block:4px 7px;}
+  #scene-chunk2 .mission-head{min-height:46px;padding:6px 12px 6px 17px !important;}
+  #scene-chunk2 .mission-head h2{font-size:clamp(1.25rem,3.2vh,1.7rem);}
+  #scene-chunk2 .mission-progress{min-height:30px;padding:4px 10px;font-size:.72rem;}
+  #scene-chunk2 .clue-hunt-panel{padding:12px 14px;gap:7px;}
+  #scene-chunk2 .clue-hunt-kicker{font-size:.6rem;}
+  #app:not(.is-pre-game) #scene-chunk2 .clue-hunt-panel h3{font-size:clamp(1.08rem,3vh,1.38rem);}
+  #scene-chunk2 .clue-hunt-goal{padding:6px 9px;font-size:.76rem;}
+  #scene-chunk2 .clue-hunt-goal>b{min-width:27px;height:27px;}
+  #scene-chunk2 .clue-hunt-goal small{font-size:.62rem;}
+  #scene-chunk2 .unlock-stack{gap:5px;}
+  #scene-chunk2 .unlock-stack:not(.is-complete) .unlock-slot{min-height:49px;padding:5px 9px;grid-template-columns:34px 1fr;gap:8px;}
+  #scene-chunk2 .unlock-stack:not(.is-complete) .unlock-icon{width:32px;height:32px;border-radius:10px;}
+  #scene-chunk2 .unlock-stack:not(.is-complete) .unlock-icon svg{width:18px;height:18px;}
+  #scene-chunk2 .unlock-slot.is-locked strong{font-size:.72rem;}
+  #scene-chunk2 .unlock-slot.is-locked small{font-size:.6rem;}
+  #scene-chunk2 .clue-byte-panel .byte-mini-figure{width:42px;min-height:48px;flex-basis:42px;}
+  #scene-chunk2 .clue-byte-panel .byte-line-panel{min-height:48px;padding:7px 10px;}
+  #scene-chunk2 .clue-byte-panel .byte-line-panel p{font-size:.78rem;}
+}
+
+@media (max-height:620px){
+  #scene-chunk2 .clue-hunt-panel{padding:9px 12px;gap:5px;}
+  #scene-chunk2 .clue-hunt-kicker{display:none;}
+  #app:not(.is-pre-game) #scene-chunk2 .clue-hunt-panel h3{
+    max-width:none;
+    font-size:clamp(1rem,3.1vh,1.18rem);
+  }
+  #scene-chunk2 .clue-hunt-head{gap:4px;}
+  #scene-chunk2 .clue-hunt-goal{min-height:30px;padding:4px 8px;}
+  #scene-chunk2 .clue-hunt-goal>b{min-width:24px;height:24px;}
+  #scene-chunk2 .clue-hunt-goal small{display:none;}
+  #scene-chunk2 .unlock-stack{gap:4px;}
+  #scene-chunk2 .unlock-stack:not(.is-complete) .unlock-slot{
+    min-height:43px;
+    padding:4px 8px;
+    grid-template-columns:30px 1fr;
+  }
+  #scene-chunk2 .unlock-stack:not(.is-complete) .unlock-icon{width:29px;height:29px;}
+  #scene-chunk2 .clue-byte-panel .byte-mini-figure{width:36px;min-height:42px;flex-basis:36px;}
+  #scene-chunk2 .clue-byte-panel .byte-line-panel{min-height:42px;padding:5px 8px;}
+  #scene-chunk2 .clue-byte-panel .byte-line-panel p{font-size:.7rem;}
+}
+
+@media (orientation:landscape) and (max-width:900px){
+  #scene-chunk2 .mission-workspace{width:calc(100vw - 12px);}
+  #scene-chunk2 .clue-hunt-layout{grid-template-columns:auto minmax(0,1fr);gap:10px;}
+  #scene-chunk2 .clue-hunt-phone{--phone-h:max(390px,min(510px,var(--fnd-play-height)));}
+}
+
+@media (orientation:portrait){
+  #scene-chunk2 .mission-workspace{width:min(94vw,720px);}
+  #scene-chunk2 .clue-hunt-layout{height:auto;max-height:none;grid-template-columns:1fr;}
+  #scene-chunk2 .clue-hunt-panel{height:auto;min-height:440px;}
+}
+
+@media (prefers-reduced-motion:reduce){
+  #scene-chunk2 .hunt-clue{transition:none;}
+}

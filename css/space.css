@@ -1,0 +1,137 @@
+/* =========================================================
+   WHITESPACE — let the cards claim the room the panels were wasting
+   Loaded after affordance.css, before modal.css.
+
+   Measured fill (content height / panel height) before this file:
+
+     chunk 4  .detector-rule-panel     41% at 1080p, 45% at 768
+     chunk 6  .detector-core-panel     48-53%
+     chunk 7  .final-decision-panel    34% at the intro, 61% mid-case
+
+   So on several screens well over half the panel was dead air while the
+   cards inside stayed small. The panels centre their children, which spreads
+   the gap but never grows the content.
+
+   The fix is structural rather than a pile of hand-picked heights: the card
+   grid becomes the flexible child of its panel, so it absorbs the leftover
+   height, and its rows stretch — which makes the cards themselves taller
+   instead of just pushing them apart. A max-height keeps a 4K display from
+   turning three checks into three billboards.
+
+   Guarded by min-height so short viewports, where the panels are already
+   tight, are left exactly as they were.
+   ========================================================= */
+
+@media (min-height:700px){
+
+  /* ---------- chunk 4: Build Detector V1 ---------- */
+  #app:not(.is-pre-game) #scene-chunk4 .prototype-check-grid{
+    flex:1 1 auto;
+    align-content:stretch;
+    max-height:clamp(150px, 26vh, 250px);
+  }
+  #app:not(.is-pre-game) #scene-chunk4 .three-only-grid .prototype-check-card{
+    min-height:0;      /* the grid row now sets the height */
+    height:100%;
+  }
+
+  /* The slot tray on the device keeps pace so the two halves stay balanced. */
+  #app:not(.is-pre-game) #scene-chunk4 .detector-load-slot{
+    min-height:clamp(52px, 7.4vh, 92px);
+  }
+
+  /* ---------- chunk 6: Upgrade to V2 ---------- */
+  #app:not(.is-pre-game) #scene-chunk6 .upgrade-check-grid,
+  #app:not(.is-pre-game) #scene-chunk6 .missing-tool-grid{
+    flex:1 1 auto;
+    align-content:stretch;
+    max-height:clamp(150px, 24vh, 240px);
+  }
+  #app:not(.is-pre-game) #scene-chunk6 :is(.upgrade-check-card,.clean-install-card,.missing-tool-card){
+    height:100%;
+  }
+
+  /* ---------- chunk 7: Final mission ---------- */
+  #app:not(.is-pre-game) #scene-chunk7 .mini-check-grid{
+    flex:0 0 auto;
+  }
+  #app:not(.is-pre-game) #scene-chunk7 .mini-check-result{
+    min-height:clamp(58px, 8.2vh, 104px);
+  }
+  #app:not(.is-pre-game) #scene-chunk7 .dual-answer-grid{
+    flex:1 1 auto;
+    align-content:stretch;
+    max-height:clamp(110px, 19vh, 180px);
+  }
+  #app:not(.is-pre-game) #scene-chunk7 .compact-answer-btn{
+    height:100%;
+    min-height:clamp(46px, 6.4vh, 82px);
+  }
+
+  /*
+    With the grids absorbing the leftover height the panels no longer need to
+    pool their children in the middle — spreading them reads as a designed
+    layout rather than a centred clump with air above and below.
+  */
+  #app:not(.is-pre-game) :is(
+    #scene-chunk4 .detector-rule-panel,
+    #scene-chunk6 .detector-core-panel,
+    #scene-chunk7 .final-decision-panel
+  ){
+    justify-content:space-between;
+    gap:clamp(10px,1.8vh,22px);
+  }
+}
+
+/*
+  Very tall displays: the cap above stops the cards growing, so the panel
+  would start pooling air again. Give the panel a ceiling and centre it in
+  the column instead of stretching it to a height its content cannot use.
+*/
+@media (min-height:1150px){
+  #app:not(.is-pre-game) :is(
+    #scene-chunk4 .detector-rule-panel,
+    #scene-chunk6 .detector-core-panel,
+    #scene-chunk7 .final-decision-panel
+  ){
+    align-self:center;
+    height:auto;
+    max-height:100%;
+  }
+}
+
+
+/* =========================================================
+   Card interiors scale with the card
+
+   Growing the cards without growing what is inside them just moves the empty
+   space from the panel into the card. The icon and labels follow the new
+   height so the card reads as filled rather than hollow.
+   ========================================================= */
+
+@media (min-height:700px){
+  #app:not(.is-pre-game) #scene-chunk4 .three-only-grid .prototype-check-card{
+    grid-template-columns:1fr;
+    grid-template-rows:auto auto auto;
+    justify-items:center;
+    align-content:center;
+    text-align:center;
+    gap:clamp(5px,1vh,10px);
+  }
+  #app:not(.is-pre-game) #scene-chunk4 .three-only-grid .prototype-check-card > span{
+    grid-row:auto;
+    width:clamp(46px,7.2vh,78px);
+    height:clamp(46px,7.2vh,78px);
+    border-radius:clamp(13px,2vh,22px);
+  }
+  #app:not(.is-pre-game) #scene-chunk4 .three-only-grid .prototype-check-card svg{
+    width:56%;
+    height:56%;
+  }
+  #app:not(.is-pre-game) #scene-chunk4 .three-only-grid .prototype-check-card strong{
+    font-size:clamp(.9rem,2.1vh,1.25rem);
+  }
+  #app:not(.is-pre-game) #scene-chunk4 .three-only-grid .prototype-check-card small{
+    font-size:clamp(.66rem,1.5vh,.85rem);
+  }
+}

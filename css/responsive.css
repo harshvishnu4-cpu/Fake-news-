@@ -1,0 +1,273 @@
+/* =========================================================
+   RESPONSIVE — every display size and orientation
+   Loaded last, after phone.css.
+
+   The mission is authored as a landscape experience: a device on the left,
+   an analysis panel on the right, inside a HUD frame. This file keeps that
+   working from a 640x360 phone in landscape up to a 4K monitor, and gives
+   portrait a stacked layout rather than pushing half the screen out of view.
+
+   Nothing here changes gameplay, copy or the HUD design — only how the
+   existing pieces are sized and arranged at sizes the original build did not
+   cover.
+   ========================================================= */
+
+
+/* =========================================================
+   A. LANDSCAPE — keep the two-column layout at every width
+
+   The base stylesheet stacks the activity grids below 820px wide. That is
+   right for a narrow portrait screen, but a 640x360 phone in landscape is
+   *shorter* than it is narrow: stacking there pushed the analysis panel
+   160px below the window. In landscape the columns stay side by side, and
+   the device column takes only the width its height gives it.
+   ========================================================= */
+
+@media (orientation:landscape) and (max-width:820px){
+  .mission-two-col,
+  .detector-builder-layout,
+  .detector-builder-layout-dnd,
+  .detector-builder-layout-clean,
+  .final-case-layout{
+    grid-template-columns:auto minmax(0,1fr);
+    gap:clamp(8px,1.4vw,18px);
+  }
+
+  /* The workspace is a fixed frame again, not a scrolling column. */
+  #app:not(.is-pre-game) .mission-workspace{
+    overflow:hidden;
+    width:min(100vw - 12px, 1220px);
+    padding:6px 8px;
+    gap:6px;
+  }
+
+  #app:not(.is-pre-game) .mission-head{
+    min-height:0;
+    padding:4px 10px !important;
+  }
+  #app:not(.is-pre-game) .mission-head h2{ font-size:clamp(0.95rem,3.4vh,1.5rem); }
+  #app:not(.is-pre-game) .mission-progress{
+    min-height:0;
+    padding:3px 8px;
+    font-size:clamp(0.6rem,1.9vh,0.8rem);
+  }
+}
+
+/*
+  Below roughly 480px of window height there is simply not enough room for a
+  readable device beside a readable panel — a 360px-tall window leaves about
+  190px of play area. Rather than shrink both into illegibility, the device
+  keeps a usable minimum and the workspace scrolls, so everything stays
+  reachable. Phones in landscape are a cramped experience by nature; this makes
+  them a working one.
+*/
+@media (orientation:landscape) and (max-height:480px){
+  #app:not(.is-pre-game) .mission-workspace{
+    max-height:var(--fnd-stage-height);
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(63,214,255,.4) transparent;
+  }
+  #app:not(.is-pre-game) .mission-two-col,
+  #app:not(.is-pre-game) .final-case-layout,
+  #app:not(.is-pre-game) .detector-builder-layout,
+  #app:not(.is-pre-game) .clue-hunt-panel,
+  #app:not(.is-pre-game) .detector-test-panel,
+  #app:not(.is-pre-game) .final-decision-panel,
+  #app:not(.is-pre-game) .detector-rule-panel,
+  #app:not(.is-pre-game) .detector-core-panel,
+  #app:not(.is-pre-game) .process-order-panel,
+  #app:not(.is-pre-game) .mission-workspace > .glass-panel{
+    max-height:none;
+    overflow:visible;
+  }
+  /*
+    Sizing the device to the play height here makes its screen about 105px
+    wide, which wraps the message to three words a line. Legibility wins over
+    fitting: the device keeps a height that leaves a ~175px screen and the
+    workspace scrolls instead.
+  */
+  #app:not(.is-pre-game) .mission-phone,
+  #app:not(.is-pre-game) .detector-phone{
+    --phone-h:max(420px, min(560px, var(--fnd-play-height)));
+    max-height:none;
+  }
+  /* Byte is no longer pinned to a floor the panel has outgrown. */
+  #app:not(.is-pre-game) .clue-hunt-panel > .byte-mini{ margin-top:0; }
+}
+
+/* Very short landscape: the panel has to give up its own padding first. */
+@media (orientation:landscape) and (max-height:430px){
+  #app:not(.is-pre-game) .clue-hunt-panel,
+  #app:not(.is-pre-game) .detector-test-panel,
+  #app:not(.is-pre-game) .final-decision-panel,
+  #app:not(.is-pre-game) .detector-rule-panel,
+  #app:not(.is-pre-game) .process-order-panel,
+  #app:not(.is-pre-game) .mission-workspace > .glass-panel{
+    padding:8px 10px;
+    gap:6px;
+  }
+  #app:not(.is-pre-game) .clue-hunt-panel h3,
+  #app:not(.is-pre-game) .detector-test-panel h3,
+  #app:not(.is-pre-game) .final-decision-panel h3,
+  #app:not(.is-pre-game) .detector-rule-panel h3{
+    font-size:clamp(0.9rem,3.6vh,1.3rem);
+  }
+  .unlock-stack:not(.is-complete) .unlock-slot{ min-height:0; padding:4px 8px; }
+  .clue-byte-panel .byte-mini-figure{ width:34px; min-height:34px; flex-basis:34px; }
+  .clue-byte-panel .byte-line-panel{ min-height:34px; padding:5px 8px; }
+}
+
+
+/* =========================================================
+   B. PORTRAIT — stack the device above the panel
+
+   In portrait the grids already collapse to one column, but the device was
+   still sized to the full play height, so the panel under it started below
+   the fold. The device is capped instead, and the workspace scrolls so
+   nothing is unreachable.
+   ========================================================= */
+
+@media (orientation:portrait){
+  /* The ladder must not take a fifth of a narrow screen. */
+  :root{
+    --game-right-safe-width:calc(76 * var(--hud-u));
+  }
+
+  #app:not(.is-pre-game) .mission-workspace{
+    max-height:var(--fnd-stage-height);
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(63,214,255,.4) transparent;
+  }
+
+  /* Rows and panels size to their content; the workspace does the scrolling. */
+  #app:not(.is-pre-game) .mission-two-col,
+  #app:not(.is-pre-game) .final-case-layout,
+  #app:not(.is-pre-game) .detector-builder-layout,
+  #app:not(.is-pre-game) .clue-hunt-panel,
+  #app:not(.is-pre-game) .detector-test-panel,
+  #app:not(.is-pre-game) .final-decision-panel,
+  #app:not(.is-pre-game) .detector-rule-panel,
+  #app:not(.is-pre-game) .detector-core-panel,
+  #app:not(.is-pre-game) .process-order-panel,
+  #app:not(.is-pre-game) .mission-workspace > .glass-panel{
+    max-height:none;
+    overflow:visible;
+  }
+
+  /*
+    Cap the device so the panel below it is on screen from the start. The
+    workspace scrolls here, so these can be generous — raised for legibility
+    on a tablet held upright, where the device is the thing being read.
+  */
+  #app:not(.is-pre-game) .mission-phone{
+    --phone-h:min(52vh, 480px);
+    max-height:none;
+  }
+  /*
+    Matches the specificity of the :has() growth rule in phone.css so portrait
+    keeps deciding its own cap rather than inheriting the landscape one.
+  */
+  #app:not(.is-pre-game):has(.game-bottom-nav) .chat-phone-shell{
+    --phone-h:min(82vh, 820px);
+  }
+  #app:not(.is-pre-game) .detector-phone{
+    --phone-h:min(52vh, 480px);
+  }
+
+  /* The clue board is a list again, not a squeezed three-up grid. */
+  .unlock-stack.is-complete{ grid-template-columns:1fr; }
+  .unlock-stack.is-complete .unlock-slot{
+    min-height:0;
+    grid-template-columns:44px 1fr;
+    grid-template-rows:auto;
+    justify-items:start;
+    text-align:left;
+    padding:8px 10px;
+  }
+
+  /* Byte sits under the board rather than being pinned to a floor that moved. */
+  #app:not(.is-pre-game) .clue-hunt-panel > .byte-mini{ margin-top:0; }
+}
+
+/* =========================================================
+   C. Rotate hint (small portrait only — hidden everywhere else)
+   ========================================================= */
+
+.rotate-hint{
+  position:fixed;
+  inset:0;
+  z-index:90;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  padding:32px 26px;
+  text-align:center;
+  background:linear-gradient(160deg,#070c1f 0%,#0b1230 45%,#241247 100%);
+  color:var(--white);
+}
+.rotate-hint svg{
+  width:84px;
+  height:84px;
+  color:var(--cyan-300);
+  animation:rotateHintTurn 2.6s ease-in-out infinite;
+}
+.rotate-hint strong{
+  font-family:var(--font-display);
+  font-size:1.5rem;
+  letter-spacing:.02em;
+}
+.rotate-hint span{
+  max-width:26ch;
+  color:var(--ink-dim);
+  font-size:1rem;
+  line-height:1.45;
+}
+@keyframes rotateHintTurn{
+  0%,100%{ transform:rotate(-12deg); }
+  50%    { transform:rotate(78deg); }
+}
+@media (prefers-reduced-motion:reduce){
+  .rotate-hint svg{ animation:none; }
+}
+
+/*
+  A phone held upright cannot show a device plus an analysis panel at a
+  readable size, so it asks to be turned rather than rendering something
+  unusable. This has to come after the `display:none` above — same
+  specificity, so order decides it.
+*/
+@media (orientation:portrait) and (max-width:600px){
+  .rotate-hint{ display:flex; }
+}
+
+
+/* =========================================================
+   D. Small-screen legibility
+   ========================================================= */
+
+/* The phone's menu dots had no floor and collapsed to ~5px. */
+#app:not(.is-pre-game) .mission-phone-menu{
+  font-size:max(9px, calc(var(--phone-h) * 0.024));
+}
+
+
+/* =========================================================
+   E. Very large displays
+
+   --hud-u caps at 1px so the HUD stops growing at its design size. The
+   workspace is already capped at 1220px, so on a 4K monitor the activity
+   simply sits centred in more room, which is the intended behaviour.
+   Nothing to do but stop the background from tiling oddly.
+   ========================================================= */
+
+@media (min-width:2200px){
+  #app:not(.is-pre-game) .mission-workspace{
+    width:min(1220px, 92vw);
+  }
+}

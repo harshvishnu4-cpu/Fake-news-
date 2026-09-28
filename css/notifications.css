@@ -1,0 +1,252 @@
+/* =========================================================
+   CLUE HUNT — checks as notifications from the device
+   Loaded after panel-card.css.
+
+   The screen read as awkward for one structural reason: the panel stretched
+   to the full row height while its content was short, so a 200px void sat
+   between the check list and Byte's line. Three list rows floating in a tall
+   empty box also gave no sense that the checks came from the message.
+
+   So the panel now hugs its content and sits centred beside the device, and
+   each check is presented as a phone notification that pops out from the
+   device when its red flag is found.
+
+   Only presentation changes. The markup, the .is-locked / .is-unlocked
+   states, the data-clue hooks and the grading logic are untouched.
+   ========================================================= */
+
+
+/* ---------- Panel hugs its content ----------
+   .mission-two-col stretches its children, which is what created the void.
+   Centring the panel and letting it size to content removes it without
+   touching the device column. */
+#app:not(.is-pre-game) .clue-hunt-panel{
+  align-self:center;
+  height:auto;
+  max-height:100%;
+  justify-content:center;
+  gap:clamp(10px,1.6vh,16px);
+}
+
+
+/* ---------- The stack reads as a notification shade ---------- */
+#app:not(.is-pre-game) .unlock-stack{
+  display:flex;
+  flex-direction:column;
+  gap:clamp(9px,1.3vh,13px);
+}
+
+/*
+  Notification surface: a light frosted card, the way a phone draws one over
+  its wallpaper. Deliberately lighter than the navy Figma card used elsewhere
+  — these are meant to read as coming from the device, not as panel furniture.
+*/
+#app:not(.is-pre-game) .unlock-slot{
+  position:relative;
+  min-height:0;
+  grid-template-columns:clamp(42px,5.2vh,54px) 1fr;
+  align-items:center;
+  gap:clamp(10px,1.4vh,14px);
+  padding:clamp(10px,1.5vh,15px) clamp(12px,1.6vh,17px);
+  border-radius:clamp(14px,2vh,20px);
+  border:1px solid rgba(255,255,255,.16);
+  background:linear-gradient(180deg, rgba(255,255,255,.155), rgba(255,255,255,.055));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.22),
+    0 12px 28px rgba(0,4,15,.42);
+  opacity:1;
+  overflow:visible;
+}
+
+/* Still waiting on its red flag: present but clearly inactive. */
+#app:not(.is-pre-game) .unlock-slot.is-locked{
+  border-style:dashed;
+  border-color:rgba(255,255,255,.14);
+  background:linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.025));
+  box-shadow:none;
+  opacity:.62;
+}
+
+/* Delivered. The lime edge is the same "correct" colour the rest of the
+   mission uses, so the meaning carries over. */
+#app:not(.is-pre-game) .unlock-slot.is-unlocked{
+  border-style:solid;
+  border-color:rgba(166,255,107,.5);
+  background:
+    linear-gradient(180deg, rgba(166,255,107,.16), rgba(166,255,107,.05)),
+    linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.26),
+    0 0 0 1px rgba(166,255,107,.18),
+    0 14px 30px rgba(0,4,15,.45);
+  animation:fnd-notif-in .42s cubic-bezier(.22,1.1,.36,1) both;
+}
+
+/*
+  The pop comes from the device side, which is what sells "this arrived from
+  the phone". The overshoot is small so it reads as a notification landing
+  rather than a card being thrown in.
+*/
+@keyframes fnd-notif-in{
+  0%   { opacity:0; transform:translateX(-30px) scale(.93); }
+  62%  { opacity:1; transform:translateX(4px)   scale(1.015); }
+  100% { opacity:1; transform:translateX(0)     scale(1); }
+}
+
+/* App-icon tile, as a notification would carry. */
+#app:not(.is-pre-game) .unlock-icon{
+  width:clamp(42px,5.2vh,54px);
+  height:clamp(42px,5.2vh,54px);
+  border-radius:clamp(11px,1.5vh,15px);
+  background:linear-gradient(160deg, rgba(63,214,255,.26), rgba(63,214,255,.09));
+  border:1px solid rgba(63,214,255,.24);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.2);
+  flex:0 0 auto;
+}
+#app:not(.is-pre-game) .unlock-slot.is-unlocked .unlock-icon{
+  background:linear-gradient(160deg, rgba(166,255,107,.3), rgba(166,255,107,.1));
+  border-color:rgba(166,255,107,.4);
+  color:var(--lime-400,#a6ff6b);
+}
+
+#app:not(.is-pre-game) .unlock-slot strong{
+  display:block;
+  font-size:clamp(.84rem,1.9vh,1.02rem);
+  line-height:1.15;
+  letter-spacing:.01em;
+}
+#app:not(.is-pre-game) .unlock-slot small{
+  display:block;
+  margin-top:.18em;
+  font-size:clamp(.7rem,1.55vh,.84rem);
+  line-height:1.3;
+  color:rgba(255,255,255,.72);
+}
+
+
+/* ---------- Completed state ----------
+   Three delivered notifications, side by side. Keeping the notification
+   surface here too means the row does not change language the moment the
+   last clue lands. */
+#app:not(.is-pre-game) .unlock-stack.is-complete{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:clamp(9px,1.2vw,14px);
+}
+#app:not(.is-pre-game) .unlock-stack.is-complete .unlock-slot{
+  grid-template-columns:1fr;
+  grid-template-rows:auto auto;
+  justify-items:center;
+  align-content:center;
+  text-align:center;
+  gap:clamp(6px,1vh,10px);
+  padding:clamp(12px,1.8vh,18px) clamp(9px,1.2vh,13px);
+  min-height:0;
+}
+#app:not(.is-pre-game) .unlock-stack.is-complete .unlock-icon{
+  width:clamp(40px,5vh,52px);
+  height:clamp(40px,5vh,52px);
+}
+
+/* Stagger the three so they land one after another rather than as a block. */
+#app:not(.is-pre-game) .unlock-stack.is-complete .unlock-slot:nth-child(2){ animation-delay:.07s; }
+#app:not(.is-pre-game) .unlock-stack.is-complete .unlock-slot:nth-child(3){ animation-delay:.14s; }
+
+
+/* ---------- Byte's line sits with the notifications, not across a gap ---- */
+#app:not(.is-pre-game) .clue-hunt-panel > .byte-mini{
+  margin-top:0;
+}
+
+
+@media (prefers-reduced-motion:reduce){
+  #app:not(.is-pre-game) .unlock-slot.is-unlocked{ animation:none; }
+}
+
+
+/* =========================================================
+   Head, progress and goal line
+
+   chunk-02 was revised alongside a second stylesheet and now emits a kicker,
+   a progress row and a goal line whose text and hint are nested in a <span>.
+   Those pieces had no styling here, which is why the goal ran over itself.
+   Styling them in the notification language keeps the improved per-clue copy
+   ("Check who sent the message") instead of the old generic line.
+   ========================================================= */
+
+#app:not(.is-pre-game) .clue-hunt-head{
+  display:flex;
+  flex-direction:column;
+  gap:clamp(5px,.9vh,9px);
+}
+
+#app:not(.is-pre-game) .clue-hunt-kicker{
+  font-family:var(--font-hud,"Chakra Petch","Segoe UI",sans-serif);
+  font-weight:700;
+  letter-spacing:.14em;
+  font-size:clamp(.58rem,1.3vh,.72rem);
+  color:var(--hud-orange,#fca01b);
+  text-transform:uppercase;
+}
+
+/* Bar and count share one line instead of the count wrapping beneath it. */
+#app:not(.is-pre-game) .clue-progress-row{
+  display:flex;
+  align-items:center;
+  gap:clamp(8px,1.2vw,14px);
+}
+#app:not(.is-pre-game) .clue-progress-row .scan-progress{
+  flex:1 1 auto;
+  min-width:0;
+}
+#app:not(.is-pre-game) .clue-progress-row > strong{
+  flex:0 0 auto;
+  font-family:var(--font-hud,"Chakra Petch","Segoe UI",sans-serif);
+  font-size:clamp(.72rem,1.5vh,.88rem);
+  color:rgba(255,255,255,.82);
+}
+
+/*
+  Goal line: count badge, then the label with its hint stacked under it. The
+  <span> has to become a column — as an inline box its <small> sat on the same
+  line as the label and the two overlapped.
+*/
+#app:not(.is-pre-game) .clue-hunt-goal{
+  display:flex;
+  align-items:center;
+  gap:clamp(9px,1.3vw,13px);
+  margin:0;
+}
+#app:not(.is-pre-game) .clue-hunt-goal > b{
+  flex:0 0 auto;
+  display:grid;
+  place-items:center;
+  width:clamp(26px,3.4vh,34px);
+  height:clamp(26px,3.4vh,34px);
+  border-radius:50%;
+  background:linear-gradient(160deg, rgba(63,214,255,.3), rgba(63,214,255,.1));
+  border:1px solid rgba(63,214,255,.32);
+  font-family:var(--font-hud,"Chakra Petch","Segoe UI",sans-serif);
+  font-size:clamp(.8rem,1.7vh,1rem);
+  color:#fff;
+}
+#app:not(.is-pre-game) .clue-hunt-goal > span{
+  display:flex;
+  flex-direction:column;
+  gap:.1em;
+  min-width:0;
+  font-weight:700;
+  font-size:clamp(.78rem,1.7vh,.95rem);
+  line-height:1.2;
+}
+#app:not(.is-pre-game) .clue-hunt-goal small{
+  font-weight:600;
+  font-size:clamp(.66rem,1.4vh,.8rem);
+  line-height:1.25;
+  color:rgba(255,255,255,.68);
+}
+#app:not(.is-pre-game) .clue-hunt-goal.is-done > b{
+  background:linear-gradient(160deg, rgba(166,255,107,.32), rgba(166,255,107,.1));
+  border-color:rgba(166,255,107,.42);
+  color:var(--lime-400,#a6ff6b);
+}

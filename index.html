@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Fake News Detector — Mission</title>
+<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="css/gameplay-polish.css">
+<link rel="stylesheet" href="css/hud.css">
+<link rel="stylesheet" href="css/phone.css">
+<link rel="stylesheet" href="css/panel-card.css">
+<!--
+  Clue-hunt screen: notifications.css is the single owner. css/clue-hunt-redesign.css
+  is a second treatment of the same screen and is deliberately NOT linked — running
+  both slid the panel over the device at tablet portrait and buried the third clue.
+  It is left on disk rather than deleted; link it INSTEAD of this line to switch.
+-->
+<link rel="stylesheet" href="css/notifications.css">
+<link rel="stylesheet" href="css/affordance.css">
+<link rel="stylesheet" href="css/space.css">
+<link rel="stylesheet" href="css/modal.css">
+<!-- responsive.css stays last so its breakpoints are never overridden. -->
+<link rel="stylesheet" href="css/responsive.css">
+<link rel="stylesheet" href="dev/dev-menu.css"><!-- DEV ONLY — delete this line and /dev before release -->
+</head>
+<body>
+<div id="app" class="is-pre-game">
+
+  <!-- Decorative background (purely visual) -->
+  <div class="bg-decor" aria-hidden="true">
+    <div class="floating-card fc1"></div>
+    <div class="floating-card fc2"></div>
+    <div class="floating-card fc3"></div>
+    <div class="floating-card fc4"></div>
+    <div class="phone-blur"></div>
+  </div>
+
+  <!-- Shown only on a small screen held upright, where the landscape layout cannot be read -->
+  <div class="rotate-hint" role="dialog" aria-live="polite" aria-label="Rotate your device">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/>
+    </svg>
+    <strong>Turn your device sideways</strong>
+    <span>This mission is played in landscape. Rotate your phone or tablet to begin.</span>
+  </div>
+
+  <!--
+    Persistent gameplay HUD — Figma "Ai and data" (node 23:752).
+    Six controls, exactly as the design specifies: quit tab, info hex, timer
+    plate, right-edge progress ladder, hint bulb and one centred primary action.
+    Hidden only on the landing screen.
+  -->
+  <header class="game-header" id="gameHeader" aria-label="Game controls">
+
+    <!-- Top-left: orange quit tab + SKAI Space plate -->
+    <div class="hud-brand">
+      <img class="hud-brand-plate" src="assets/ui/hud/skai-tab.svg" alt="" aria-hidden="true">
+      <span class="hud-brand-word" aria-label="SKAI Space">
+        <img class="hud-brand-mark" src="assets/ui/hud/skai-mark.svg" alt="" aria-hidden="true">
+        <img class="hud-brand-name" src="assets/ui/hud/skai-word.svg" alt="" aria-hidden="true">
+      </span>
+      <button type="button" class="hud-quit" id="btnPause" aria-haspopup="dialog" aria-controls="pauseModal" title="Pause mission" aria-label="Pause mission"></button>
+    </div>
+
+    <!-- Top-right: connector rail, sound hex + menu, info hex, timer plate -->
+    <div class="hud-topright">
+      <img class="hud-topright-rail" src="assets/ui/hud/top-right-line.svg" alt="" aria-hidden="true">
+
+      <!--
+        Sound hex. Opens the two-item audio menu below it (Figma node 557:2877).
+        The menu is a sibling of the button, not a child, so the GSAP hover
+        transform on the hex never scales the open panel with it.
+      -->
+      <div class="hud-sound-wrap">
+        <button type="button" class="hud-sound" id="btnHudSound" aria-haspopup="true" aria-expanded="false" aria-controls="hudSoundMenu" title="Sound options" aria-label="Sound options">
+          <img class="hud-sound-plate" src="assets/ui/hud/sound-hex.svg" alt="" aria-hidden="true">
+          <img class="hud-sound-icon" src="assets/ui/hud/sound-icon.svg" alt="" aria-hidden="true">
+        </button>
+        <div class="hud-sound-menu" id="hudSoundMenu" role="menu" aria-label="Sound options" hidden>
+          <img class="hud-sound-menu-plate" src="assets/ui/hud/sound-menu-panel.svg" alt="" aria-hidden="true">
+          <button type="button" class="hud-sound-item" id="btnSoundReplay" role="menuitem">
+            <span class="hud-sound-item-icon">
+              <img src="assets/ui/hud/menu-replay.svg" alt="" aria-hidden="true">
+            </span>
+            <span class="hud-sound-item-label">Replay<br>Narration</span>
+          </button>
+          <button type="button" class="hud-sound-item" id="btnSoundMute" role="menuitem" aria-pressed="false">
+            <span class="hud-sound-item-icon">
+              <img class="hud-sound-mute-ring" src="assets/ui/hud/menu-mute-ring.svg" alt="" aria-hidden="true">
+              <img class="hud-sound-mute-glyph" src="assets/ui/hud/menu-mute-glyph.svg" alt="" aria-hidden="true">
+            </span>
+            <span class="hud-sound-item-label" id="hudSoundMuteLabel">Mute All<br>Sounds</span>
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="hud-info" id="btnHudInfo" aria-haspopup="dialog" aria-controls="infoModal" title="Mission information" aria-label="Mission information">
+        <img src="assets/ui/hud/info-hex.svg" alt="" aria-hidden="true">
+        <span aria-hidden="true">i</span>
+      </button>
+      <div class="hud-timer" id="gameHeaderTimer" role="timer" aria-label="30 minutes remaining">
+        <img src="assets/ui/hud/timer-plate.svg" alt="" aria-hidden="true">
+        <span id="gameTimerText">30:00</span>
+      </div>
+    </div>
+
+    <!--
+      Right edge: progress ladder. The plate and the ten stripe slots keep the
+      designed geometry; JS only swaps each stripe's fill, so the meter fills
+      from the bottom the way the design shows it.
+    -->
+    <div class="hud-progress" id="gameHeaderProgress" aria-label="Mission progress: step 1 of 7">
+      <svg class="hud-ladder" viewBox="0 0 90 640" fill="none" aria-hidden="true" preserveAspectRatio="none">
+        <path class="hud-ladder-plate" d="M0.386806 11.7959C0.192124 5.85895 5.70092 1.36509 11.4778 2.74835L83.0958 19.8973C87.1446 20.8668 90 24.4866 90 28.6499V586.717C90 589.644 88.5762 592.389 86.1829 594.075L34.6181 630.398C28.7651 634.521 20.6747 630.49 20.4401 623.335L0.386806 11.7959Z" fill="white"/>
+        <g class="hud-ladder-stripes">
+          <path data-stripe="0" d="M62 580.396L62 542.502L42 570.424L42 610.312L62 580.396Z"/>
+          <path data-stripe="1" d="M62 533.396L62 495.502L42 523.424L42 563.312L62 533.396Z"/>
+          <path data-stripe="2" d="M62 486.396L62 448.502L42 476.424L42 516.312L62 486.396Z"/>
+          <path data-stripe="3" d="M62 436.396L62 398.502L42 426.424L42 466.312L62 436.396Z"/>
+          <path data-stripe="4" d="M62 386.396L62 348.502L42 376.424L42 416.312L62 386.396Z"/>
+          <path data-stripe="5" d="M62 336.396L62 298.502L42 326.424L42 366.312L62 336.396Z"/>
+          <path data-stripe="6" d="M62 286.396L62 248.502L42 276.424L42 316.312L62 286.396Z"/>
+          <path data-stripe="7" d="M62 236.396L62 198.502L42 226.424L42 266.312L62 236.396Z"/>
+          <path data-stripe="8" d="M62 186.396L62 148.502L42 176.424L42 216.312L62 186.396Z"/>
+          <path data-stripe="9" d="M62 136.396L62 98.5024L42 126.424L42 166.312L62 136.396Z"/>
+        </g>
+      </svg>
+      <img class="hud-volt hud-volt--a is-flipped" src="assets/ui/hud/volt.svg" alt="" aria-hidden="true">
+      <img class="hud-volt hud-volt--b is-flipped" src="assets/ui/hud/volt.svg" alt="" aria-hidden="true">
+      <img class="hud-volt hud-volt--c" src="assets/ui/hud/volt.svg" alt="" aria-hidden="true">
+      <img class="hud-volt hud-volt--d" src="assets/ui/hud/volt.svg" alt="" aria-hidden="true">
+      <span class="hud-progress-count" id="hudProgressCount">1/7</span>
+    </div>
+  </header>
+
+  <nav class="game-bottom-nav" aria-label="Mission actions">
+    <!-- Decorative rails and chevrons that frame the primary action -->
+    <img class="hud-rail hud-rail--left" src="assets/ui/hud/rail-left.svg" alt="" aria-hidden="true">
+    <img class="hud-chevron hud-chevron--one" src="assets/ui/hud/rail-chevron.svg" alt="" aria-hidden="true">
+    <img class="hud-chevron hud-chevron--two" src="assets/ui/hud/rail-chevron.svg" alt="" aria-hidden="true">
+    <img class="hud-rail hud-rail--right" src="assets/ui/hud/rail-right.svg" alt="" aria-hidden="true">
+    <img class="hud-rail-bar" src="assets/ui/hud/rail-right-bar.svg" alt="" aria-hidden="true">
+
+    <!-- Bottom-left: hint bulb — replays Byte's guidance for this screen -->
+    <button type="button" class="hud-hint is-idle" id="btnHudHint" disabled title="Hear Byte's hint again" aria-label="Hear Byte's hint again">
+      <img class="hud-hint-ring" src="assets/ui/hud/hint-bulb-ring.svg" alt="" aria-hidden="true">
+      <img class="hud-hint-base" src="assets/ui/hud/hint-bulb-base.svg" alt="" aria-hidden="true">
+      <img class="hud-hint-glass" src="assets/ui/hud/hint-bulb-glass.svg" alt="" aria-hidden="true">
+    </button>
+
+    <!-- Bottom-centre: the one primary action for the current screen -->
+    <button type="button" class="hud-cta is-idle" id="btnHeaderNext" aria-label="Continue" disabled>
+      <span class="hud-cta-label" id="hudCtaLabel">LET’S INVESTIGATE</span>
+      <img class="hud-screw hud-screw--tl" src="assets/ui/hud/screw-c.svg" alt="" aria-hidden="true">
+      <img class="hud-screw hud-screw--tr" src="assets/ui/hud/screw-b.svg" alt="" aria-hidden="true">
+      <img class="hud-screw hud-screw--bl" src="assets/ui/hud/screw-b.svg" alt="" aria-hidden="true">
+      <img class="hud-screw hud-screw--br" src="assets/ui/hud/screw-a.svg" alt="" aria-hidden="true">
+    </button>
+  </nav>
+
+  <main id="stage">
+
+    <!-- =================== SCENE 1: MISSION ENTRY =================== -->
+    <section class="scene entry-scene is-active" id="scene-entry" aria-hidden="false" aria-labelledby="entryScreenTitle">
+      <h1 class="entry-screen-title" id="entryScreenTitle">The Fake News Detector</h1>
+      <div class="entry-atmosphere" aria-hidden="true">
+        <span class="entry-orbit entry-orbit--one"></span>
+        <span class="entry-orbit entry-orbit--two"></span>
+        <span class="entry-particle entry-particle--one"></span>
+        <span class="entry-particle entry-particle--two"></span>
+        <span class="entry-particle entry-particle--three"></span>
+      </div>
+      <div class="entry-card entry-card--compact entry-card--nolabel">
+        <div class="entry-status" aria-hidden="true">
+          <span class="entry-status-dot"></span>
+          Junior fact-check squad
+        </div>
+        <div class="logo-badge">
+          <span class="logo-chip logo-chip--left" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none">
+              <defs><radialGradient id="fndLensGrad" cx="35%" cy="30%" r="75%"><stop offset="0" stop-color="#eafeff"/><stop offset=".55" stop-color="#8be9ff"/><stop offset="1" stop-color="#1c9fd6"/></radialGradient></defs>
+              <circle cx="19" cy="19" r="13" fill="url(#fndLensGrad)" stroke="#0a2f4d" stroke-width="3"/>
+              <path d="M29 29l12 12" stroke="#0a2f4d" stroke-width="7" stroke-linecap="round"/>
+              <path d="M29 29l12 12" stroke="#3fd6ff" stroke-width="3" stroke-linecap="round"/>
+              <path d="M13 14a7 7 0 0 1 9-3" stroke="#eafeff" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>
+            </svg>
+          </span>
+
+          <div class="logo-console" aria-hidden="true">
+            <span class="logo-console-dot logo-console-dot--amber"></span>
+            <span class="logo-console-leds"></span>
+            <span class="logo-console-text" data-text="THE">THE</span>
+            <span class="logo-console-leds"></span>
+            <span class="logo-console-dot logo-console-dot--red"></span>
+          </div>
+
+          <div class="logo-badge-plate">
+            <h1 class="mission-title" aria-label="The Fake News Detector">
+              <span class="line-fake title-main-row" aria-hidden="true">
+                <span class="title-word title-word--fake" data-text="FAKE">FAKE</span>
+                <span class="title-word title-word--news" data-text="NEWS">NEWS</span>
+              </span>
+              <span class="line-detector" aria-hidden="true">
+                <span class="detector-word" data-text="DETECTOR">DETECTOR</span>
+              </span>
+            </h1>
+          </div>
+
+          <div class="logo-scan-accent" aria-hidden="true">
+            <span class="logo-scan-pulse logo-scan-pulse--left">
+              <svg viewBox="0 0 24 30" fill="none"><path d="M4 7c5 4 5 12 0 16" stroke="#3fd6ff" stroke-width="3" stroke-linecap="round"/><path d="M12 3c8 6 8 18 0 24" stroke="#3fd6ff" stroke-width="3" stroke-linecap="round" opacity=".55"/></svg>
+            </span>
+            <span class="logo-scan-icon">
+              <svg viewBox="0 0 40 40" fill="none">
+                <circle cx="20" cy="20" r="14" fill="none" stroke="#3fd6ff" stroke-width="3" opacity=".55"/>
+                <path d="M13 20l5 5 10-11" stroke="#a6ff6b" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </span>
+            <span class="logo-scan-pulse logo-scan-pulse--right">
+              <svg viewBox="0 0 24 30" fill="none"><path d="M4 7c5 4 5 12 0 16" stroke="#3fd6ff" stroke-width="3" stroke-linecap="round"/><path d="M12 3c8 6 8 18 0 24" stroke="#3fd6ff" stroke-width="3" stroke-linecap="round" opacity=".55"/></svg>
+            </span>
+          </div>
+
+          <span class="logo-chip logo-chip--right" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none">
+              <defs><linearGradient id="fndShieldGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9ffcf"/><stop offset=".5" stop-color="#a6ff6b"/><stop offset="1" stop-color="#5fbf35"/></linearGradient></defs>
+              <path d="M24 4l17 6v12c0 12-8 19-17 22C15 41 7 34 7 22V10z" fill="url(#fndShieldGrad)" stroke="#173d16" stroke-width="3"/>
+              <path d="M16 24l6 6 11-13" stroke="#173d16" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M16 24l6 6 11-13" stroke="#e9ffcf" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
+        </div>
+
+        <p class="entry-tagline" aria-label="Spot the clues. Stop the spread.">
+          <span>Spot the clues</span>
+          <i aria-hidden="true"></i>
+          <span>Stop the spread</span>
+        </p>
+
+        <button type="button" class="btn-primary entry-play-btn" id="btnStartMission">
+          <span class="entry-play-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </span>
+          <span>START MISSION</span>
+        </button>
+        <p class="entry-ready" aria-hidden="true"><span></span>Your first case is ready</p>
+      </div>
+    </section>
+
+    <!-- =================== SCENE 2: BYTE INTRO =================== -->
+    <section class="scene byte-intro-scene" id="scene-byte-intro" aria-hidden="true">
+      <div class="glass-panel byte-intro-card">
+        <div class="byte-intro-figure" aria-hidden="true">
+          <img src="assets/byte/byte-character.png" alt="">
+        </div>
+        <div class="byte-intro-copy">
+          <span class="entry-label">BYTE</span>
+          <h2 class="byte-intro-title">Hi!<span id="byteIntroName" hidden></span></h2>
+          <p class="byte-intro-text">I’m Byte. Let’s check a suspicious message.</p>
+          <button type="button" class="btn-primary" id="btnLetsBegin" data-header-next-ignore>LET’S BEGIN</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- =================== SCENES 3–4: DASHBOARD =================== -->
+    <section class="scene dashboard-scene" id="scene-dashboard" aria-hidden="true">
+      <div class="dashboard-row">
+      <div class="dashboard-frame" id="dashboardFrame">
+        <p class="welcome-line">Welcome, <strong id="welcomeName">Agent</strong>.</p>
+
+        <div class="phone-panel" id="phonePanel">
+          <div class="chat-phone-shell">
+            <div class="chat-notch" aria-hidden="true"></div>
+            <div class="chat-screen">
+              <div class="chat-statusbar" aria-hidden="true">
+                <span>11:29 AM</span>
+                <span class="chat-status-icons">
+                  <span class="dot small"></span>
+                  <span class="dot"></span>
+                  <span class="battery-pill"></span>
+                </span>
+              </div>
+
+              <div class="chat-app-header">
+                <button class="chat-back-btn" type="button" aria-label="Back" disabled>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                </button>
+                <div class="chat-app-meta">
+                  <span class="chat-app-title">Unknown Number</span>
+                  <span class="chat-app-subtitle">+91 90123 45678</span>
+                </div>
+                <div class="chat-app-actions" aria-hidden="true">
+                  <span></span><span></span><span></span>
+                </div>
+              </div>
+
+              <div class="chat-body" aria-live="polite">
+                <div class="chat-day-pill">Today</div>
+                <div class="chat-safety-note">Check messages before you trust them.</div>
+
+                <div class="status-line" id="statusLine">
+                  <span class="status-dot"></span>
+                  <span id="statusText">New forwarded message received</span>
+                </div>
+
+                <div class="notification-card" id="notificationCard" role="status" aria-live="polite">
+                  <div class="message-bubble-header">
+                    <span class="message-bubble-avatar" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M5 10.5V17c0 1.1 3.1 2 7 2s7-.9 7-2v-6.5"/></svg>
+                    </span>
+                    <span class="message-bubble-sender">
+                      <span class="message-bubble-sender-name">Unknown Number</span>
+                      <span class="message-bubble-forwarded" id="forwardedTag">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7"/><path d="M9 7h8v8"/></svg>
+                        Forwarded many times
+                      </span>
+                    </span>
+                    <span class="message-bubble-menu" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>
+                    </span>
+                  </div>
+                  <div class="message-bubble-divider"></div>
+
+                  <div class="message-bubble-preview" id="messagePreview">
+                    <h2 class="notification-title">URGENT SCHOOL NOTICE</h2>
+                    <p class="notification-preview">"School will remain closed for the next three days…"</p>
+                  </div>
+
+                  <div class="full-message" id="fullMessage">
+                    <h3>URGENT SCHOOL NOTICE</h3>
+                    <p>School will remain closed for the next three days.</p>
+                    <p>The science test has also been postponed.</p>
+                    <p>Share this with all class groups immediately.</p>
+                    <p class="signature">— School Administration</p>
+                  </div>
+
+                  <span class="message-bubble-time" id="messageTime">9:41 AM</span>
+                </div>
+
+                <button type="button" class="btn-primary chat-open-btn" id="btnSeeFullMessage" data-header-next-ignore>SEE FULL MESSAGE</button>
+
+                <p class="decision-prompt" id="decisionPrompt" hidden>What will you do?</p>
+
+                <div class="decision-row" id="decisionRow" hidden>
+                  <button type="button" class="decision-btn" id="btnForward" data-decision="forward">FORWARD</button>
+                  <button type="button" class="decision-btn" id="btnIgnore" data-decision="ignore">IGNORE</button>
+                </div>
+
+                <p class="forward-alert" id="forwardAlert" hidden>Message not checked yet.</p>
+
+                <div class="chat-inputbar" aria-hidden="true">
+                  <span class="chat-input-placeholder">Message</span>
+                  <span class="chat-send-dot"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Byte's reserved slot: always part of the layout so it can never overlap the message panel -->
+      <div class="byte-slot">
+        <div class="byte-overlay" id="byteOverlay">
+          <div class="byte-figure">
+            <div class="byte-scan"></div>
+            <img src="assets/byte/byte-character.png" alt="Byte, your robot investigation guide">
+          </div>
+          <div class="byte-speech" id="byteSpeech" aria-live="polite">
+            <p id="byteLine1"></p>
+            <p id="byteLine2"></p>
+            <button type="button" class="byte-cta" id="btnInspect" data-header-next-ignore>START INVESTIGATION</button>
+          </div>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- =================== CHUNK 2: INVESTIGATE THE MESSAGE =================== -->
+    <section class="scene" id="scene-chunk2" aria-hidden="true"></section>
+
+    <!-- =================== CHUNK 3: BUILD THE CHECKING RULES =================== -->
+    <section class="scene" id="scene-chunk3" aria-hidden="true"></section>
+
+    <!-- =================== CHUNK 4: BUILD DETECTOR VERSION 1 =================== -->
+    <section class="scene" id="scene-chunk4" aria-hidden="true"></section>
+
+    <!-- =================== TEST DETECTOR VERSION 1 =================== -->
+    <section class="scene" id="scene-chunk5" aria-hidden="true"></section>
+
+    <!-- =================== FIND THE FAILURE AND UPGRADE =================== -->
+    <section class="scene" id="scene-chunk6" aria-hidden="true"></section>
+
+    <!-- =================== FINAL INDEPENDENT MISSION AND CLOSING =================== -->
+    <section class="scene" id="scene-chunk7" aria-hidden="true"></section>
+
+    <!-- =================== SHARED SHORT TRANSITION (reused between chunks 1-4) =================== -->
+    <section class="scene complete-scene" id="scene-complete" aria-hidden="true">
+      <h2 id="transitionTitle">First Decision Made</h2>
+      <p id="transitionSubtitle">Next: Investigate the Message</p>
+    </section>
+
+  </main>
+
+  <!-- Pause / Settings modal: one place for all secondary controls -->
+  <div class="modal-overlay" id="pauseModal" role="dialog" aria-modal="true" aria-labelledby="pauseModalTitle">
+    <div class="modal-box pause-box">
+      <img class="modal-skin" src="assets/ui/hud/modal-panel.svg" alt="" aria-hidden="true">
+      <button type="button" class="modal-close" data-close-modal="pauseModal" aria-label="Close and resume">
+        <img src="assets/ui/hud/modal-close.svg" alt="" aria-hidden="true">
+      </button>
+      <div class="modal-content">
+      <span class="modal-kicker">MISSION PAUSED</span>
+      <h2 id="pauseModalTitle">Take a breath.</h2>
+      <p>Continue when you are ready, or adjust a setting.</p>
+      <div class="settings-grid">
+        <!--
+          The HUD in the Figma design carries no Back control, so the previous-screen
+          action lives here instead of being dropped. Same id, same handler.
+        -->
+        <button type="button" class="settings-action" id="btnHeaderBack" aria-label="Go to the previous screen" disabled>
+          <span class="settings-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/><path d="M9 12h10"/></svg></span>
+          <span>Previous Screen</span>
+        </button>
+        <button type="button" class="settings-action voice-control" id="btnVoice" aria-label="Turn voice off" aria-pressed="true">
+          <span class="settings-icon">
+            <svg class="voice-on-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6.5 9H3v6h3.5L11 19z"/><path d="M15 9.5a4 4 0 0 1 0 5"/><path d="M18 7a7 7 0 0 1 0 10"/></svg>
+            <svg class="voice-off-icon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5L6.5 9H3v6h3.5L11 19z"/><path d="M16 10l5 5M21 10l-5 5"/></svg>
+          </span>
+          <span id="voiceSettingLabel">Voice On</span>
+        </button>
+        <button type="button" class="settings-action" id="btnReplayVoice" aria-label="Hear this screen again">
+          <span class="settings-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 1 0 2.3-5.7"/><path d="M4 4v5h5"/><path d="M12 8v4l3 2"/></svg></span>
+          <span>Hear Again</span>
+        </button>
+        <button type="button" class="settings-action" id="btnInfo" aria-haspopup="dialog" aria-controls="infoModal" aria-label="Mission information">
+          <span class="settings-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="7.5" r="0.6" fill="currentColor" stroke="none"/></svg></span>
+          <span>Mission Info</span>
+        </button>
+        <button type="button" class="settings-action" id="btnFullscreen" aria-label="Toggle fullscreen">
+          <span class="settings-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg></span>
+          <span>Fullscreen</span>
+        </button>
+        <button type="button" class="settings-action is-danger" id="btnRestart" aria-label="Restart mission">
+          <span class="settings-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v5h5"/></svg></span>
+          <span>Restart</span>
+        </button>
+      </div>
+      <button type="button" class="btn-primary" id="btnResume">RESUME</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info modal -->
+  <div class="modal-overlay" id="infoModal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+    <div class="modal-box">
+      <img class="modal-skin" src="assets/ui/hud/modal-panel.svg" alt="" aria-hidden="true">
+      <button type="button" class="modal-close" data-close-modal="infoModal" aria-label="Close mission information">
+        <img src="assets/ui/hud/modal-close.svg" alt="" aria-hidden="true">
+      </button>
+      <div class="modal-content">
+        <h2 id="infoModalTitle">Your Mission</h2>
+        <p>Your mission is to investigate messages before deciding whether to share them.</p>
+        <button type="button" class="btn-primary" id="btnCloseInfo">Got it</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Replay-mission confirmation modal (custom, not browser confirm()) -->
+  <div class="modal-overlay" id="replayModal" role="dialog" aria-modal="true" aria-labelledby="replayModalTitle">
+    <div class="modal-box">
+      <img class="modal-skin" src="assets/ui/hud/modal-panel.svg" alt="" aria-hidden="true">
+      <button type="button" class="modal-close" data-close-modal="replayModal" aria-label="Cancel replay">
+        <img src="assets/ui/hud/modal-close.svg" alt="" aria-hidden="true">
+      </button>
+      <div class="modal-content">
+      <h2 id="replayModalTitle">Replay the Mission?</h2>
+      <p>This will clear your progress and return you to the start. This cannot be undone.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn-ghost" id="btnReplayCancel">Cancel</button>
+        <button type="button" class="btn-primary" id="btnReplayConfirm" style="width:auto;">Yes, Replay</button>
+      </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/vendor/gsap.min.js"></script>
+<script src="js/state.js"></script>
+<script src="js/audio-hooks.js"></script>
+<script src="js/chunks/chunk-02-investigation.js"></script>
+<script src="js/chunks/chunk-03-checking-rules.js"></script>
+<script src="js/chunks/chunk-04-detector-build.js"></script>
+<script src="js/chunks/chunk-05-testing.js"></script>
+<script src="js/chunks/chunk-06-upgrade.js"></script>
+<script src="js/chunks/chunk-07-final-mission.js"></script>
+<script src="js/narration.js"></script>
+<script src="js/app.js"></script>
+<script src="js/fnd-motion.js"></script>
+<script src="dev/dev-menu.js"></script><!-- DEV ONLY — delete this line and /dev before release -->
+</body>
+</html>

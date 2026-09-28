@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 560" role="img" aria-labelledby="title desc">
+  <title id="title">Digital fake news detector scanner</title>
+  <desc id="desc">A futuristic scanner with glowing rings and five rule slots.</desc>
+  <defs>
+    <radialGradient id="core"><stop offset="0" stop-color="#dffbff"/><stop offset=".35" stop-color="#55ddff"/><stop offset=".72" stop-color="#745cff"/><stop offset="1" stop-color="#17214f"/></radialGradient>
+    <linearGradient id="body" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1b2d65"/><stop offset="1" stop-color="#0a1230"/></linearGradient>
+    <linearGradient id="slot" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#253d7a"/><stop offset="1" stop-color="#142451"/></linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="12" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="shadow"><feDropShadow dx="0" dy="20" stdDeviation="20" flood-color="#03091c" flood-opacity=".55"/></filter>
+  </defs>
+  <rect width="780" height="560" rx="40" fill="none"/>
+  <g filter="url(#shadow)">
+    <path d="M150 80h480c36 0 65 29 65 65v270c0 36-29 65-65 65H150c-36 0-65-29-65-65V145c0-36 29-65 65-65z" fill="url(#body)" stroke="#54dfff" stroke-width="4"/>
+    <circle cx="390" cy="250" r="128" fill="none" stroke="#7e6aff" stroke-width="10" opacity=".45"/>
+    <circle cx="390" cy="250" r="98" fill="none" stroke="#43ddff" stroke-width="7" stroke-dasharray="24 15" filter="url(#glow)"/>
+    <circle cx="390" cy="250" r="68" fill="url(#core)" filter="url(#glow)"/>
+    <path d="M390 196l46 26v55l-46 27-46-27v-55z" fill="#08132e" opacity=".72"/>
+    <path d="M366 250l18 18 34-43" fill="none" stroke="#a6ff6b" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+    <g>
+      <rect x="135" y="405" width="96" height="38" rx="19" fill="url(#slot)" stroke="#3fd6ff"/>
+      <rect x="239" y="405" width="96" height="38" rx="19" fill="url(#slot)" stroke="#3fd6ff"/>
+      <rect x="343" y="405" width="96" height="38" rx="19" fill="url(#slot)" stroke="#3fd6ff"/>
+      <rect x="447" y="405" width="96" height="38" rx="19" fill="url(#slot)" stroke="#3fd6ff"/>
+      <rect x="551" y="405" width="96" height="38" rx="19" fill="url(#slot)" stroke="#3fd6ff"/>
+    </g>
+    <g fill="#8be9ff"><circle cx="183" cy="424" r="7"/><circle cx="287" cy="424" r="7"/><circle cx="391" cy="424" r="7"/><circle cx="495" cy="424" r="7"/><circle cx="599" cy="424" r="7"/></g>
+  </g>
+</svg>

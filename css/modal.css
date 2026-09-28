@@ -1,0 +1,197 @@
+/* =========================================================
+   MODAL SKIN — Figma "SKAI final" → "Info screen" (node 201:209)
+   Loaded after hud.css, before responsive.css.
+
+   The design replaces the plain rounded card with the same plate language as
+   the HUD: a tilted navy quadrilateral with a 6px white stroke, and an orange
+   close tab notched into its top-right corner. Colours and geometry come from
+   the exported SVG, not from guesses:
+
+     #091C56  panel fill        white / 6  panel stroke
+     rgba(6,6,6,.44)            scrim
+
+   Only the shell changes. Every modal keeps its own id, content, handlers and
+   focus behaviour — this file restyles, it does not rewire.
+   ========================================================= */
+
+
+/* ---------- Scrim ----------
+   The design's scrim is a flat 44% black wash. The previous blur is kept off
+   it so the HUD stays legible behind the panel the way the design shows. */
+.modal-overlay{
+  background:rgba(6,6,6,.44);
+  backdrop-filter:none;
+  padding:2vh 2vw;
+}
+
+
+/* ---------- Panel ----------
+   The plate is 1440.36 x 861 in the design. Sizing it off --hud-u keeps it in
+   step with the rest of the HUD, and the vw/vh caps stop it overflowing a
+   short or narrow window. `aspect-ratio` holds the drawn shape, which matters
+   here because the artwork is a quadrilateral, not a rectangle. */
+.modal-box{
+  position:relative;
+  width:min(calc(1440.36 * var(--hud-u)), 92vw, 1440px);
+  max-width:none;
+  aspect-ratio:1440.36 / 861;
+  height:auto;
+  max-height:94vh;
+  background:none;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+  padding:0;
+  overflow:visible;
+}
+
+/*
+  The exported plate is drawn portrait (861 x 1440.36) and the design rotates
+  it 90°. Rotating here rather than re-drawing keeps the asset untouched.
+  Because the SVG carries preserveAspectRatio="none", swapping width/height
+  against the box and then rotating lands it exactly on the container.
+*/
+.modal-skin{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:calc(100% * 861 / 1440.36);
+  height:calc(100% * 1440.36 / 861);
+  transform:translate(-50%,-50%) rotate(90deg);
+  transform-origin:50% 50%;
+  pointer-events:none;
+  display:block;
+}
+
+/*
+  Content sits inside the shape's safe rectangle, not its bounding box. The
+  rotated quadrilateral's worst-case edges are left 9.5%, right 9.05%, top
+  13.2%, bottom 0.35%; these paddings clear each of them with room to spare so
+  no text can land on a sloped edge.
+*/
+.modal-content{
+  position:relative;
+  z-index:1;
+  height:100%;
+  padding:16% 11% 6%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:clamp(6px,1.4vh,16px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(253,201,84,.5) transparent;
+  text-align:center;
+}
+.modal-content > *{ max-width:100%; }
+
+/* The settings grid and the action row still want the full content width. */
+.pause-box .modal-content .settings-grid,
+.modal-content .modal-actions{ width:100%; }
+
+
+/* ---------- Close tab ----------
+   183 x 141 at (1540, 89) in frame space, against a panel at (215, 126):
+   left 92%, top -4.3% of the panel, 12.71% x 16.38%. */
+.modal-close{
+  position:absolute;
+  left:92%;
+  top:-4.3%;
+  width:12.71%;
+  height:16.38%;
+  min-width:44px;
+  min-height:38px;
+  padding:0;
+  border:0;
+  background:none;
+  cursor:pointer;
+  z-index:2;
+  display:block;
+}
+.modal-close img{
+  width:100%;
+  height:100%;
+  display:block;
+}
+.modal-close:focus-visible{ outline:3px solid #fff; outline-offset:3px; border-radius:10px; }
+
+
+/* ---------- Typography on the new plate ----------
+   The panel is deep navy, so the body copy needs more contrast than the old
+   card's dimmed ink. Headings keep Chakra Petch to match the HUD plates. */
+.modal-box h2{
+  margin:0 0 .35em;
+  font-family:var(--font-hud,"Chakra Petch","Segoe UI",sans-serif);
+  font-weight:700;
+  font-size:clamp(1.1rem, 4.4vh, 2.1rem);
+  line-height:1.15;
+  color:#fff;
+  letter-spacing:.01em;
+}
+.modal-box p{
+  margin:0 0 .5em;
+  color:rgba(255,255,255,.86);
+  font-size:clamp(.82rem, 2.3vh, 1.05rem);
+  line-height:1.45;
+}
+/* The old kicker was a full-width pill; on this plate it reads as a stray bar,
+   so it becomes a plain centred label. */
+.modal-kicker{
+  align-self:center;
+  width:auto;
+  background:none;
+  border:0;
+  padding:0;
+  color:var(--hud-orange,#fca01b);
+  font-family:var(--font-hud,"Chakra Petch","Segoe UI",sans-serif);
+  font-weight:700;
+  letter-spacing:.12em;
+  font-size:clamp(.6rem, 1.7vh, .8rem);
+}
+
+/* The settings grid keeps its own layout; only its skin follows the plate. */
+.pause-box .settings-grid{
+  margin:0;
+  gap:clamp(6px,1.2vh,12px);
+}
+.pause-box .settings-action{
+  background:rgba(255,255,255,.07);
+  border-color:rgba(253,201,84,.35);
+}
+.pause-box .settings-action:hover:not(:disabled){
+  background:rgba(255,255,255,.14);
+  border-color:rgba(253,201,84,.7);
+}
+
+.modal-box .btn-primary{ align-self:center; }
+
+
+/* ---------- Small screens ----------
+   Below roughly 620px of height the drawn plate leaves too little room inside
+   its safe area, so the shell drops back to a plain panel rather than clipping
+   the content. The close tab stays, since it is the only way out on touch. */
+@media (max-height:620px), (max-width:700px){
+  .modal-box{
+    width:min(560px, 94vw);
+    aspect-ratio:auto;
+    height:auto;
+    max-height:92vh;
+    background:#091c56;
+    border:3px solid #fff;
+    border-radius:16px;
+  }
+  .modal-skin{ display:none; }
+  .modal-content{
+    padding:clamp(16px,3vh,26px);
+    max-height:92vh;
+  }
+  .modal-close{
+    left:auto;
+    right:6px;
+    top:6px;
+    width:44px;
+    height:34px;
+  }
+}

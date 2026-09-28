@@ -1,0 +1,181 @@
+/* =========================================================
+   AFFORDANCES — what can I tap, what can I drag, what is just a label
+   Loaded after notifications.css, before modal.css.
+
+   The cards carried no cursor at all, so even a mouse user got no feedback,
+   and nothing in the resting state said "press me". GSAP already lifts these
+   on hover, but hover only helps once you are on the target and does not
+   exist on touch at all — so the signal has to be in the resting state.
+
+   Three states are now distinguishable at a glance:
+
+     tappable   raised key edge + pointer cursor
+     draggable  same, plus a grip and a grab cursor
+     static     flat, default cursor, no edge
+
+   No transforms here on purpose. GSAP owns transform on these elements and
+   writes it inline; a CSS transform would either lose or fight it.
+   ========================================================= */
+
+:root{
+  --fnd-press-edge:0 4px 0 rgba(3,12,30,.55);
+  --fnd-press-edge-down:0 1px 0 rgba(3,12,30,.55);
+}
+
+
+/* =========================================================
+   TAPPABLE — a raised key edge under the card
+   ========================================================= */
+
+#app:not(.is-pre-game) :is(
+  .choice-card,
+  .source-card,
+  .evidence-tile,
+  .verdict-choice,
+  .prediction-btn,
+  .upgrade-check-card,
+  .upgrade-option-card,
+  .upgrade-missing-card,
+  .clean-install-card,
+  .missing-tool-card,
+  .warning-prediction-card,
+  .compact-answer-btn,
+  .prototype-check-card
+):not(:disabled){
+  cursor:pointer;
+  box-shadow:
+    inset 0 var(--fnd-card-edge-w,5.154px) 0 0 var(--fnd-card-edge,#fdae35),
+    var(--fnd-press-edge),
+    0 12px 24px rgba(0,4,15,.34);
+}
+
+/* Pressing pushes the card onto its edge. Shadow only — no transform. */
+#app:not(.is-pre-game) :is(
+  .choice-card,
+  .source-card,
+  .evidence-tile,
+  .verdict-choice,
+  .prediction-btn,
+  .upgrade-check-card,
+  .upgrade-option-card,
+  .upgrade-missing-card,
+  .clean-install-card,
+  .missing-tool-card,
+  .warning-prediction-card,
+  .compact-answer-btn,
+  .prototype-check-card
+):not(:disabled):active{
+  box-shadow:
+    inset 0 var(--fnd-card-edge-w,5.154px) 0 0 var(--fnd-card-edge,#fdae35),
+    var(--fnd-press-edge-down),
+    0 6px 14px rgba(0,4,15,.3);
+}
+
+/* Selected keeps its lime meaning and keeps the edge, so it still reads as
+   a control rather than becoming a label the moment it is chosen. */
+#app:not(.is-pre-game) :is(
+  .upgrade-check-card,
+  .missing-tool-card,
+  .warning-prediction-card,
+  .compact-answer-btn,
+  .choice-card,
+  .source-card,
+  .evidence-tile,
+  .verdict-choice
+).is-selected:not(:disabled){
+  box-shadow:
+    inset 0 var(--fnd-card-edge-w,5.154px) 0 0 var(--lime-400,#a6ff6b),
+    0 0 0 2px rgba(166,255,107,.45),
+    var(--fnd-press-edge),
+    0 12px 24px rgba(0,4,15,.34);
+}
+
+
+/* =========================================================
+   DRAGGABLE — grab cursor and a grip, so drag is not guessed
+   ========================================================= */
+
+#app:not(.is-pre-game) [draggable="true"]:not(:disabled){
+  cursor:grab;
+}
+#app:not(.is-pre-game) [draggable="true"]:not(:disabled):active{
+  cursor:grabbing;
+}
+
+/*
+  Six dots in the top-right corner — the same grip language a list row uses
+  for "pick me up". Only on cards that are actually draggable, so a tap-only
+  card never wears it.
+*/
+#app:not(.is-pre-game) .prototype-check-card[draggable="true"]{
+  position:relative;
+}
+#app:not(.is-pre-game) .prototype-check-card[draggable="true"]::after{
+  content:"";
+  position:absolute;
+  top:.5rem;
+  right:.5rem;
+  width:11px;
+  height:16px;
+  color:rgba(255,255,255,.45);
+  background-image:radial-gradient(currentColor 1.1px, transparent 1.3px);
+  background-size:5.5px 5.5px;
+  background-position:0 0;
+  pointer-events:none;
+}
+#app:not(.is-pre-game) .prototype-check-card[draggable="true"]:hover::after,
+#app:not(.is-pre-game) .prototype-check-card[draggable="true"].is-armed::after{
+  color:rgba(255,255,255,.8);
+}
+
+
+/* =========================================================
+   DROP TARGETS — say "put it here" rather than sitting inert
+   ========================================================= */
+
+#app:not(.is-pre-game) .detector-load-slot.is-empty-drop,
+#app:not(.is-pre-game) .detector-load-slot.is-tap-target{
+  cursor:copy;
+}
+#app:not(.is-pre-game) .detector-load-slot.is-filled{
+  cursor:default;
+}
+
+
+/* =========================================================
+   DONE / STATIC — explicitly not a control
+
+   An installed card and a result card both used to look exactly like a
+   live one. Flattening them is half of what makes the live ones read.
+   ========================================================= */
+
+#app:not(.is-pre-game) :is(
+  .prototype-check-card,
+  .upgrade-check-card,
+  .missing-tool-card,
+  .clean-install-card,
+  .compact-answer-btn
+):disabled{
+  cursor:default;
+  box-shadow:
+    inset 0 var(--fnd-card-edge-w,5.154px) 0 0 rgba(253,174,53,.35),
+    0 6px 14px rgba(0,4,15,.26);
+  opacity:.82;
+}
+
+/* Cards that only ever display something. */
+#app:not(.is-pre-game) :is(
+  .unlock-slot,
+  .report-failure-card,
+  .final-report-card,
+  .completion-score-card,
+  .mini-check-result,
+  .scan-result-row
+){
+  cursor:default;
+}
+
+
+@media (prefers-reduced-motion:reduce){
+  #app:not(.is-pre-game) [draggable="true"]:not(:disabled){ cursor:grab; }
+}

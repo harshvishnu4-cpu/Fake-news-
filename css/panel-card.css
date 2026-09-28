@@ -1,0 +1,190 @@
+/* =========================================================
+   PANEL + CARD SKIN — Figma "SKAI final"
+     node 907:3164 "Panal"  (1470 x 715)
+     node 907:2993 "Cards"  (3 x 435 x 507)
+   Loaded after gameplay-polish.css, before modal.css.
+
+   Both nodes are the same Figma component at two sizes, so they share every
+   value except the gradient angle, which Figma resolves per aspect ratio:
+
+     fill        linear-gradient(<angle>, #1A3C8D 5.3232%, #071848 97.378%)
+     top edge    inset 0 5.154px 0 0 #FDAE35
+     radius      29.635px  (fixed — it does NOT scale with the box)
+     angle       156.16deg on the wide panel, 133.36deg on the card
+
+   Using one angle for both would be wrong: at panel width a corner-to-corner
+   gradient runs almost horizontally, and the design clearly reads top-light /
+   bottom-dark. So the two angles are kept as the design specifies them.
+
+   The outer shadow is not in the node's style payload but is plainly present
+   in both renders, so a restrained one is included to match.
+
+   SPECIFICITY NOTE — the in-game skins this replaces live at
+   `#app:not(.is-pre-game) …` (1,2,0). These rules use the same shape so they
+   win on source order, and every selected / locked / correct state is then
+   re-asserted at (1,3,0) so state always outranks the skin. Nothing here
+   changes layout, geometry or behaviour: fill, radius, edge and shadow only.
+   ========================================================= */
+
+:root{
+  --fnd-card-from:#1a3c8d;
+  --fnd-card-to:#071848;
+  --fnd-card-edge:#fdae35;
+  --fnd-card-radius:29.635px;
+  --fnd-card-edge-w:5.154px;
+}
+
+
+/* =========================================================
+   PANEL — node 907:3164
+   ========================================================= */
+
+#app:not(.is-pre-game) .glass-panel{
+  border:1px solid transparent;
+  border-radius:var(--fnd-card-radius);
+  background:linear-gradient(156.16deg, var(--fnd-card-from) 5.3232%, var(--fnd-card-to) 97.378%);
+  box-shadow:
+    inset 0 var(--fnd-card-edge-w) 0 0 var(--fnd-card-edge),
+    0 18px 40px rgba(0,4,15,.45);
+  /* The design panel is opaque, so there is nothing for a blur to sample. */
+  backdrop-filter:none;
+}
+
+/*
+  The panels are flex containers, so a pseudo-element for the top edge becomes
+  a flex item and lands in the content flow instead of on the frame. The inset
+  shadow already draws the edge correctly, so it stays the single source of it.
+*/
+
+
+/* =========================================================
+   CARDS — node 907:2993
+
+   Applied to the group the game already treats as one card family, plus the
+   card-shaped elements that were outside it. Deliberately NOT applied to:
+     .detector-load-slot   drop target — its pulse and drop-hover states are
+                           the affordance that teaches the drag interaction
+     .rule-tile            a chip, not a card
+
+   .prototype-check-card IS included: its armed state is declared !important in
+   styles.css, so the drag affordance still wins over this skin untouched.
+   ========================================================= */
+
+#app:not(.is-pre-game) :is(
+  .choice-card,
+  .source-card,
+  .evidence-tile,
+  .verdict-choice,
+  .prediction-btn,
+  .upgrade-check-card,
+  .upgrade-option-card,
+  .upgrade-missing-card,
+  .clean-install-card,
+  .missing-tool-card,
+  .report-failure-card,
+  .final-report-card,
+  .completion-score-card,
+  .warning-prediction-card,
+  .compact-answer-btn,
+  .prototype-check-card
+){
+  border:1px solid transparent;
+  border-radius:var(--fnd-card-radius);
+  background:linear-gradient(133.36deg, var(--fnd-card-from) 5.3232%, var(--fnd-card-to) 97.378%);
+  box-shadow:
+    inset 0 var(--fnd-card-edge-w) 0 0 var(--fnd-card-edge),
+    0 10px 24px rgba(0,4,15,.34);
+  backdrop-filter:none;
+}
+
+/*
+  The completed clue board is node 907:2993 exactly — three cards in a row —
+  so it takes the card skin even though the same class is a plain locked row
+  while the hunt is still running.
+*/
+#app:not(.is-pre-game) .unlock-stack.is-complete .unlock-slot{
+  border:1px solid transparent;
+  border-radius:var(--fnd-card-radius);
+  background:linear-gradient(133.36deg, var(--fnd-card-from) 5.3232%, var(--fnd-card-to) 97.378%);
+  box-shadow:
+    inset 0 var(--fnd-card-edge-w) 0 0 var(--fnd-card-edge),
+    0 10px 24px rgba(0,4,15,.34);
+  opacity:1;
+}
+
+
+/* =========================================================
+   STATE — re-asserted above the skin so meaning always wins.
+
+   The top edge takes the state colour rather than staying amber: on this
+   treatment the edge is the loudest part of the card, so leaving it amber
+   while the body turned green read as unselected at a glance.
+   ========================================================= */
+
+#app:not(.is-pre-game) :is(
+  .choice-card,
+  .source-card,
+  .evidence-tile,
+  .verdict-choice,
+  .prediction-btn,
+  .upgrade-check-card,
+  .upgrade-option-card,
+  .upgrade-missing-card,
+  .clean-install-card,
+  .missing-tool-card,
+  .report-failure-card,
+  .final-report-card,
+  .completion-score-card,
+  .warning-prediction-card,
+  .compact-answer-btn,
+  .prototype-check-card
+).is-selected{
+  border-color:transparent;
+  background:
+    linear-gradient(133.36deg, rgba(166,255,107,.22), rgba(166,255,107,.05) 60%),
+    linear-gradient(133.36deg, var(--fnd-card-from) 5.3232%, var(--fnd-card-to) 97.378%);
+  box-shadow:
+    inset 0 var(--fnd-card-edge-w) 0 0 var(--lime-400,#a6ff6b),
+    0 0 0 2px rgba(166,255,107,.45),
+    0 10px 24px rgba(0,4,15,.34);
+}
+
+#app:not(.is-pre-game) :is(
+  .missing-tool-card,
+  .upgrade-check-card,
+  .choice-card,
+  .source-card,
+  .evidence-tile,
+  .verdict-choice,
+  .compact-answer-btn
+).is-correct-answer{
+  background:
+    linear-gradient(133.36deg, rgba(166,255,107,.24), rgba(166,255,107,.05) 60%),
+    linear-gradient(133.36deg, var(--fnd-card-from) 5.3232%, var(--fnd-card-to) 97.378%);
+  box-shadow:
+    inset 0 var(--fnd-card-edge-w) 0 0 var(--lime-400,#a6ff6b),
+    0 0 0 2px rgba(166,255,107,.5),
+    0 10px 24px rgba(0,4,15,.34);
+}
+
+/* Hover keeps the card language instead of the old translucent wash. */
+#app:not(.is-pre-game) :is(
+  .choice-card,
+  .source-card,
+  .evidence-tile,
+  .verdict-choice,
+  .prediction-btn,
+  .upgrade-check-card,
+  .upgrade-option-card,
+  .clean-install-card,
+  .missing-tool-card,
+  .warning-prediction-card,
+  .compact-answer-btn,
+  .prototype-check-card
+):hover:not(:disabled):not(.is-selected){
+  border-color:transparent;
+  box-shadow:
+    inset 0 var(--fnd-card-edge-w) 0 0 #ffc366,
+    0 0 0 2px rgba(253,174,53,.32),
+    0 14px 30px rgba(0,4,15,.4);
+}

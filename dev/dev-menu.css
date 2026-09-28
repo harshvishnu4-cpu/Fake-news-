@@ -1,0 +1,149 @@
+/* =========================================================
+   DEV PAGE MENU — testing aid, NOT part of the game
+   Delete the /dev folder and the two "DEV ONLY" lines in index.html.
+
+   Everything here is namespaced under .devmenu so it cannot leak into the
+   game's styles, and it deliberately does NOT use the game's design tokens —
+   it should never be mistaken for part of the product.
+   ========================================================= */
+
+.devmenu{
+  position:fixed;
+  top:8px;
+  left:8px;
+  z-index:9000;          /* above the HUD (60) and the modals (60) */
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  line-height:1.2;
+}
+
+/* ---------- Launcher ---------- */
+.devmenu-toggle{
+  width:34px;
+  height:34px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:1px solid rgba(255,255,255,.28);
+  border-radius:9px;
+  background:rgba(18,10,32,.82);
+  backdrop-filter:blur(6px);
+  cursor:pointer;
+  box-shadow:0 4px 14px rgba(0,0,0,.45);
+  transition:background .14s ease, border-color .14s ease;
+}
+.devmenu-toggle:hover{
+  background:rgba(38,16,68,.92);
+  border-color:rgba(226,120,255,.7);
+}
+.devmenu-toggle:focus-visible{
+  outline:2px solid #e278ff;
+  outline-offset:2px;
+}
+
+.devmenu-bars{
+  display:grid;
+  gap:4px;
+  width:16px;
+}
+.devmenu-bars i{
+  display:block;
+  height:2px;
+  border-radius:2px;
+  background:#e278ff;
+  transition:transform .16s ease, opacity .16s ease;
+}
+.devmenu.is-open .devmenu-bars i:nth-child(1){ transform:translateY(6px) rotate(45deg); }
+.devmenu.is-open .devmenu-bars i:nth-child(2){ opacity:0; }
+.devmenu.is-open .devmenu-bars i:nth-child(3){ transform:translateY(-6px) rotate(-45deg); }
+
+/* ---------- Panel ---------- */
+.devmenu-panel{
+  position:absolute;
+  top:calc(100% + 6px);
+  left:0;
+  width:250px;
+  max-height:min(70vh, 520px);
+  overflow-y:auto;
+  border:1px solid rgba(226,120,255,.35);
+  border-radius:11px;
+  background:rgba(14,8,26,.96);
+  backdrop-filter:blur(10px);
+  box-shadow:0 18px 44px rgba(0,0,0,.6);
+  color:#f3ecff;
+  scrollbar-width:thin;
+}
+.devmenu-panel[hidden]{ display:none; }
+
+.devmenu-head{
+  padding:9px 12px;
+  font-size:10px;
+  letter-spacing:.12em;
+  color:#e278ff;
+  border-bottom:1px solid rgba(226,120,255,.22);
+}
+
+.devmenu-list{ padding:5px; }
+
+.devmenu-item{
+  width:100%;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:8px 9px;
+  border:0;
+  border-radius:7px;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  font-size:12px;
+  text-align:left;
+  cursor:pointer;
+}
+.devmenu-item:hover{ background:rgba(226,120,255,.14); }
+.devmenu-item:focus-visible{ outline:2px solid #e278ff; outline-offset:-2px; }
+
+.devmenu-num{
+  flex:0 0 auto;
+  width:18px;
+  height:18px;
+  display:grid;
+  place-items:center;
+  border-radius:5px;
+  background:rgba(255,255,255,.08);
+  font-size:10px;
+  color:rgba(243,236,255,.7);
+}
+.devmenu-label{ flex:1 1 auto; min-width:0; }
+.devmenu-dot{
+  flex:0 0 auto;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:transparent;
+}
+
+/* Active page */
+.devmenu-item.is-active{
+  background:rgba(226,120,255,.2);
+  color:#fff;
+}
+.devmenu-item.is-active .devmenu-num{
+  background:#e278ff;
+  color:#1a0b26;
+}
+.devmenu-item.is-active .devmenu-dot{
+  background:#7dff9b;
+  box-shadow:0 0 8px rgba(125,255,155,.9);
+}
+
+.devmenu-foot{
+  padding:8px 12px;
+  border-top:1px solid rgba(226,120,255,.18);
+  font-size:9.5px;
+  color:rgba(243,236,255,.45);
+}
+
+@media (prefers-reduced-motion:reduce){
+  .devmenu-bars i,
+  .devmenu-toggle{ transition:none; }
+}
