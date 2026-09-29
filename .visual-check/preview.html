@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8">
+<style>html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#eef6ff}iframe{position:fixed;inset:0;width:100vw;height:100vh;border:0;display:block}</style>
+<script>
+var p=new URLSearchParams(location.search);
+var chunk=Math.max(1,Math.min(7,Number(p.get("chunk"))||2));
+var scene=p.get("scene")||("chunk"+chunk);
+sessionStorage.setItem("fakeNewsDetectorState",JSON.stringify({buildVersion:16,currentChunk:chunk,playerName:"Agent"}));
+sessionStorage.setItem("fakeNewsDetectorScene",scene);
+document.write('<iframe src="/index.html?visual='+chunk+'"></iframe>');
+</script>

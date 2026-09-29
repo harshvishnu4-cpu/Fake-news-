@@ -1,0 +1,699 @@
+/* =========================================================
+   GAMEPLAY HUD — Figma "SKAI final" → "Ai and data" (node 23:752)
+   Loaded after gameplay-polish.css.
+
+   The design frame is 1959 x 1102. Rather than hard-coding pixels, `--hud-u`
+   is one design pixel expressed as a real length, so every plate keeps its
+   drawn proportions while the whole HUD scales with the viewport. Horizontal
+   placement stays in % so each piece hugs the edge it was drawn against.
+
+   Colours are taken from the exported SVGs, not guessed:
+     #2E48A3  primary action plate      #0A2D94  timer plate
+     #F5A524  info hex                  #FCA01B  progress done / count text
+     #FBEBA8  progress remaining        #FEE714  hint bulb filament
+   ========================================================= */
+
+@font-face{
+  font-family:"Chakra Petch";
+  font-style:normal;
+  font-weight:700;
+  font-display:swap;
+  src:url("../assets/fonts/chakra-petch-700.woff2") format("woff2");
+}
+
+:root{
+  /*
+    One design pixel. The frame is 1102 tall, so 1 design px = 0.0907vh and the
+    HUD keeps the same share of the screen at every height.
+
+    No lower bound: a floor made the HUD proportionally *larger* the shorter the
+    screen got, which is exactly backwards — at 360px tall it pushed the
+    progress ladder 73px past the bottom of the window. Touch targets carry
+    their own px minimums, so nothing depends on a floor here. The 1px cap stops
+    the HUD growing past its design size on a large monitor.
+  */
+  --hud-u:min(0.0907vh, 1px);
+
+  --hud-blue:#2e48a3;
+  --hud-blue-deep:#0a2d94;
+  --hud-amber:#f5a524;
+  --hud-orange:#fca01b;
+  --hud-cream:#fbeba8;
+
+  --font-hud:"Chakra Petch","Segoe UI",sans-serif;
+}
+
+/* The HUD reserves the same safe areas the activities already size against,
+   plus a right-hand inset so no panel runs under the progress ladder. */
+:root{
+  --game-header-safe-height:calc(112 * var(--hud-u));
+  --game-bottom-nav-safe-height:calc(150 * var(--hud-u));
+  --game-right-safe-width:calc(112 * var(--hud-u));
+}
+
+#app:not(.is-pre-game) .mission-workspace{
+  margin-right:var(--game-right-safe-width);
+}
+
+
+/* =========================================================
+   Shell
+   ========================================================= */
+
+/*
+  The HUD spans the whole frame so each plate can sit where the design puts it.
+  The old header was a solid bar, so it carried a background, a border and a
+  16px backdrop-filter — at full-frame size that filter would blur the entire
+  game. All three have to go, not just the background.
+*/
+.game-header{
+  position:absolute;
+  z-index:45;
+  inset:0;
+  display:block;
+  height:auto;
+  padding:0;
+  gap:0;
+  background:none;
+  border:0;
+  box-shadow:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+  pointer-events:none;
+}
+
+.game-header > *{ pointer-events:auto; }
+
+#app.is-pre-game .game-header,
+#app.is-pre-game .game-bottom-nav{ display:none !important; }
+
+
+/* =========================================================
+   Top-left — quit tab and SKAI Space plate   (design 277 x 131 at -4,-4)
+   ========================================================= */
+
+.hud-brand{
+  position:absolute;
+  left:calc(-4 * var(--hud-u));
+  top:calc(-4 * var(--hud-u));
+  width:calc(277 * var(--hud-u));
+  height:calc(131 * var(--hud-u));
+}
+
+.hud-brand-plate{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+
+/* Wordmark sits on the white plate at 158,28 — 90 x 16.7 in design space. */
+.hud-brand-word{
+  position:absolute;
+  left:calc(162 * var(--hud-u));
+  top:calc(32 * var(--hud-u));
+  display:flex;
+  align-items:flex-end;
+  gap:calc(3 * var(--hud-u));
+}
+.hud-brand-mark{
+  width:calc(56.5 * var(--hud-u));
+  height:calc(14.8 * var(--hud-u));
+  display:block;
+}
+.hud-brand-name{
+  width:calc(30 * var(--hud-u));
+  height:calc(10 * var(--hud-u));
+  display:block;
+}
+
+/* Invisible hit area over the orange tab: the tab art lives in the plate SVG,
+   so the button only needs to own the region and the interaction states. */
+.hud-quit{
+  position:absolute;
+  left:calc(4 * var(--hud-u));
+  top:calc(4 * var(--hud-u));
+  width:calc(150 * var(--hud-u));
+  height:calc(118 * var(--hud-u));
+  min-width:48px;
+  min-height:48px;
+  padding:0;
+  border:0;
+  border-radius:calc(19 * var(--hud-u)) 0 calc(28 * var(--hud-u)) calc(19 * var(--hud-u));
+  background:transparent;
+  cursor:pointer;
+}
+.hud-quit:hover{ background:rgba(255,255,255,.16); }
+.hud-quit:focus-visible{ outline:3px solid #fff; outline-offset:-4px; }
+
+
+/* =========================================================
+   Top-right — connector rail, info hex, timer plate
+   ========================================================= */
+
+.hud-topright{
+  position:absolute;
+  right:calc(21 * var(--hud-u));
+  top:calc(-6 * var(--hud-u));
+  height:calc(112 * var(--hud-u));
+}
+
+/*
+  Connector rail. The design places this at x 1591 with a 530-wide box, so its
+  right edge lands at 2121 — 162 past the 1959 frame edge, which is why only
+  the diagonal shoulder and the top run are meant to be visible. Sitting it
+  flush against the timer instead showed the wrong part of the shape.
+  .hud-topright is already inset 21 from the frame, hence -183.
+*/
+.hud-topright-rail{
+  position:absolute;
+  right:calc(-183 * var(--hud-u));
+  top:0;
+  width:calc(522.9 * var(--hud-u));
+  height:calc(73 * var(--hud-u));
+  display:block;
+}
+
+/*
+  Info hex — the plate is drawn 71.34 x 64.03 and sits in an 89.2 x 82.5 box
+  because the design rotates it 16.63°. The rotation lives on the image so the
+  "i" stays upright (it is a separate node in the design) and so GSAP keeps
+  sole ownership of the button's own transform.
+*/
+.hud-info{
+  position:absolute;
+  /* design: hex right edge 1749.2 sits flush against the timer's left edge */
+  right:calc(188.8 * var(--hud-u));
+  top:calc(32 * var(--hud-u));
+  width:calc(89 * var(--hud-u));
+  height:calc(82.5 * var(--hud-u));
+  min-width:44px;
+  min-height:44px;
+  padding:0;
+  border:0;
+  background:none;
+  cursor:pointer;
+  display:grid;
+  place-items:center;
+}
+.hud-info img{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:calc(71.342 * var(--hud-u));
+  height:calc(64.025 * var(--hud-u));
+  transform:translate(-50%,-50%) rotate(16.63deg);
+  display:block;
+}
+.hud-info span{
+  position:relative;
+  font-family:var(--font-hud);
+  font-weight:700;
+  font-size:calc(42 * var(--hud-u));
+  line-height:1;
+  color:#fff;
+  padding-bottom:calc(3 * var(--hud-u));
+}
+.hud-info:focus-visible{ outline:3px solid #fff; outline-offset:2px; border-radius:50%; }
+
+/* Timer plate — design 189 x 77.8 at 1749,27.7, label 34.4px */
+/* =========================================================
+   Sound hex + audio menu — Figma nodes 557:2699 (closed) / 557:2877 (open)
+
+   The hex sits immediately left of the info hex. In the design the two boxes
+   are 84.9 design px apart (info x 1656, sound x 1571.1), so the sound hex is
+   anchored off the info hex's own right offset rather than re-derived from the
+   frame edge — that keeps the pair locked together at every size.
+
+   sound-hex.svg is exported at the full 89.16 x 82.51 box with the 16.63°
+   rotation already baked in, unlike info-hex.svg, so it needs no CSS rotation.
+   ========================================================= */
+
+.hud-sound-wrap{
+  position:absolute;
+  /* 188.8 (info hex) + 84.9 (design gap between the two hex boxes) */
+  right:calc(273.7 * var(--hud-u));
+  top:calc(32 * var(--hud-u));
+  width:calc(89.163 * var(--hud-u));
+  height:calc(82.509 * var(--hud-u));
+}
+
+.hud-sound{
+  position:absolute;
+  inset:0;
+  min-width:44px;
+  min-height:44px;
+  padding:0;
+  border:0;
+  background:none;
+  cursor:pointer;
+  display:block;
+}
+.hud-sound-plate{
+  position:absolute;
+  left:0;
+  top:0;
+  width:calc(89.163 * var(--hud-u));
+  height:calc(82.509 * var(--hud-u));
+  display:block;
+}
+/* design: icon at 1597.2,40.0 inside a hex box at 1571.1,15.98 */
+.hud-sound-icon{
+  position:absolute;
+  left:calc(26.1 * var(--hud-u));
+  top:calc(24 * var(--hud-u));
+  width:calc(37.896 * var(--hud-u));
+  height:calc(33 * var(--hud-u));
+  display:block;
+}
+.hud-sound:focus-visible{ outline:3px solid #fff; outline-offset:2px; border-radius:12%; }
+
+/*
+  Menu panel. The design centres it on the hex (panel centre 1616.5 vs hex
+  centre 1615.7) and starts it 78 design px below the hex box top, where the
+  plate's little diamond notch meets the hex.
+*/
+.hud-sound-menu{
+  position:absolute;
+  left:50%;
+  margin-left:calc(-87.5 * var(--hud-u));
+  top:calc(78 * var(--hud-u));
+  width:calc(175 * var(--hud-u));
+  height:calc(167 * var(--hud-u));
+  min-width:150px;
+  z-index:6;
+}
+.hud-sound-menu[hidden]{ display:none; }
+
+.hud-sound-menu-plate{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+  pointer-events:none;
+}
+
+/*
+  Rows. The design puts the icon at x 23 inside the panel with the label at
+  x 79, row centres 71 apart (first centre 47, second 118).
+*/
+.hud-sound-item{
+  position:absolute;
+  left:calc(14 * var(--hud-u));
+  width:calc(150 * var(--hud-u));
+  height:calc(56 * var(--hud-u));
+  min-height:34px;
+  padding:0;
+  border:0;
+  background:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:calc(17 * var(--hud-u));
+  border-radius:calc(10 * var(--hud-u));
+  text-align:left;
+}
+.hud-sound-item:nth-of-type(1){ top:calc(19 * var(--hud-u)); }
+.hud-sound-item:nth-of-type(2){ top:calc(90 * var(--hud-u)); }
+
+.hud-sound-item-icon{
+  position:relative;
+  flex:0 0 auto;
+  width:calc(38.901 * var(--hud-u));
+  height:calc(38.901 * var(--hud-u));
+  min-width:22px;
+  min-height:22px;
+}
+.hud-sound-item-icon img{
+  position:absolute;
+  left:0;
+  top:0;
+  width:calc(38.901 * var(--hud-u));
+  height:calc(38.901 * var(--hud-u));
+  display:block;
+}
+/* the small speaker glyph sits inside the ring at 9.4,11.5 */
+.hud-sound-mute-glyph{
+  left:calc(9.4 * var(--hud-u)) !important;
+  top:calc(11.5 * var(--hud-u)) !important;
+  width:calc(22.992 * var(--hud-u)) !important;
+  height:calc(15.699 * var(--hud-u)) !important;
+}
+
+.hud-sound-item-label{
+  font-family:var(--font-hud);
+  font-weight:700;
+  font-size:calc(17.81 * var(--hud-u));
+  line-height:1.29;
+  color:#fff;
+  white-space:nowrap;
+}
+
+.hud-sound-item:hover,
+.hud-sound-item:focus-visible{ background:rgba(255,255,255,.12); outline:none; }
+.hud-sound-item:focus-visible{ box-shadow:0 0 0 2px #fdc954; }
+
+/* Small screens: the design size would drop the labels below ~9px. */
+@media (max-height:700px){
+  .hud-sound-menu{ height:auto; padding-bottom:calc(10 * var(--hud-u)); }
+  .hud-sound-item-label{ font-size:max(10px, calc(17.81 * var(--hud-u))); }
+}
+
+.hud-timer{
+  position:absolute;
+  right:0;
+  top:calc(34 * var(--hud-u));
+  width:calc(189 * var(--hud-u));
+  height:calc(78 * var(--hud-u));
+  display:grid;
+  place-items:center;
+}
+.hud-timer img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  display:block;
+}
+.hud-timer span{
+  position:relative;
+  font-family:var(--font-hud);
+  font-weight:700;
+  font-size:calc(34 * var(--hud-u));
+  line-height:1;
+  letter-spacing:.01em;
+  color:#fff;
+  font-variant-numeric:tabular-nums;
+}
+.hud-timer.is-warning span{ color:#ffd76a; }
+.hud-timer.is-expired span{ color:#ffb19b; }
+
+
+/* =========================================================
+   Right edge — progress ladder   (design 90 x 640 at 1869,226)
+   ========================================================= */
+
+/*
+  Pinned to the design's own y (226 of 1102) rather than centred. --hud-u is
+  derived from viewport height, so 226u + 640u is always 78.5% of the height —
+  it can never overflow, and it lands exactly where the design puts it.
+  Positioned with `top`, not a transform: GSAP owns `transform` here.
+*/
+.hud-progress{
+  position:absolute;
+  right:0;
+  top:calc(226 * var(--hud-u));
+  width:calc(90 * var(--hud-u));
+  height:calc(640 * var(--hud-u));
+}
+
+.hud-ladder{
+  width:100%;
+  height:100%;
+  display:block;
+  filter:drop-shadow(0 calc(6 * var(--hud-u)) calc(14 * var(--hud-u)) rgba(0,0,0,.35));
+}
+
+.hud-ladder-stripes path{
+  fill:var(--hud-cream);
+  transition:fill .35s ease;
+}
+.hud-ladder-stripes path.is-done{ fill:var(--hud-orange); }
+
+/*
+  Four screw heads pin the ladder to the frame in the design (the "Volt" nodes).
+  Positions are relative to the ladder's own 90 x 640 box: design x 1873/1944
+  minus the ladder's x 1869, design y minus its y 226. The top pair is flipped
+  in the design, so the slot reads the other way.
+*/
+.hud-volt{
+  position:absolute;
+  width:calc(12 * var(--hud-u));
+  height:calc(12 * var(--hud-u));
+  display:block;
+  pointer-events:none;
+}
+.hud-volt.is-flipped{ transform:rotate(180deg); }
+.hud-volt--a{ left:calc(4 * var(--hud-u));  top:calc(7 * var(--hud-u)); }
+.hud-volt--b{ left:calc(75 * var(--hud-u)); top:calc(23 * var(--hud-u)); }
+.hud-volt--c{ left:calc(75 * var(--hud-u)); top:calc(579 * var(--hud-u)); }
+.hud-volt--d{ left:calc(24 * var(--hud-u)); top:calc(614 * var(--hud-u)); }
+
+/* "2/10" in the design — the real step count sits in the same spot. */
+.hud-progress-count{
+  position:absolute;
+  left:calc(10 * var(--hud-u));
+  top:calc(38 * var(--hud-u));
+  font-family:var(--font-hud);
+  font-weight:700;
+  font-size:calc(35 * var(--hud-u));
+  line-height:1;
+  color:var(--hud-orange);
+  white-space:nowrap;
+}
+
+
+/* =========================================================
+   Bottom band — rails, hint bulb, primary action
+   ========================================================= */
+
+.game-bottom-nav{
+  position:absolute;
+  z-index:44;
+  inset:auto 0 0 0;
+  display:block;
+  height:calc(186 * var(--hud-u));
+  padding:0;
+  pointer-events:none;
+  background:none;
+  backdrop-filter:none;
+  -webkit-backdrop-filter:none;
+}
+.game-bottom-nav::before{ display:none; }
+.game-bottom-nav > *{ pointer-events:auto; }
+
+/*
+  Rails are drawn art — never interactive. They are also the bracket the bottom
+  controls sit in, so they come and go with those controls instead of stretching
+  across an empty screen on their own.
+*/
+.hud-rail,
+.hud-chevron,
+.hud-rail-bar{
+  position:absolute;
+  display:block;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .32s var(--ease-out);
+}
+
+.game-bottom-nav.has-action .hud-rail,
+.game-bottom-nav.has-action .hud-chevron,
+.game-bottom-nav.has-action .hud-rail-bar,
+.game-bottom-nav.has-hint .hud-rail--left,
+.game-bottom-nav.has-hint .hud-chevron{
+  opacity:1;
+}
+
+/*
+  Left rail: design box x 0-813, y 938-963 → 139u up from the frame floor. The
+  exported SVG is 30 tall, not 25, because the 5px stroke bleeds 10% past the
+  box top and bottom — so it is drawn at 30 and shifted up 2.5 to land the
+  stroke where the design puts it.
+*/
+.hud-rail--left{
+  left:0;
+  bottom:calc(136.5 * var(--hud-u));
+  width:calc(813 * var(--hud-u));
+  height:calc(30 * var(--hud-u));
+}
+.hud-chevron{
+  width:calc(44 * var(--hud-u));
+  height:calc(23.5 * var(--hud-u));
+  transform:scaleY(-1);
+}
+/*
+  The chevrons are vertically flipped in the design, so the metadata y (966.5)
+  is the flipped box's far edge, not its CSS top — that is 943. Using the
+  metadata value dropped them 23.5 below the rail instead of straddling its
+  step. 1102 - 966.5 = 135.5 from the floor.
+*/
+.hud-chevron--one{ left:calc(308 * var(--hud-u)); bottom:calc(135.5 * var(--hud-u)); }
+.hud-chevron--two{ left:calc(334 * var(--hud-u)); bottom:calc(135.5 * var(--hud-u)); }
+
+/* Right rail: design box x 1167.6-1963.6, y 995-1020 → 82u up, same stroke bleed. */
+.hud-rail--right{
+  right:calc(-4.56 * var(--hud-u));   /* design right edge 1963.56, just past the frame */
+  bottom:calc(79.5 * var(--hud-u));
+  width:calc(796 * var(--hud-u));
+  height:calc(30 * var(--hud-u));
+}
+/* Also flipped, so its CSS top is 992, not the metadata's 1014.5 → 87.5 up. */
+.hud-rail-bar{
+  right:calc(-53.56 * var(--hud-u));  /* design right edge 2012.56 */
+  bottom:calc(87.5 * var(--hud-u));
+  width:calc(489 * var(--hud-u));
+  height:calc(22.5 * var(--hud-u));
+  transform:scaleY(-1);
+}
+
+/* Hint bulb — design 116 x 99 at 47.5,963 → 40u up from the floor. */
+.hud-hint{
+  position:absolute;
+  left:calc(47.5 * var(--hud-u));
+  bottom:calc(40 * var(--hud-u));
+  width:calc(116 * var(--hud-u));
+  height:calc(99 * var(--hud-u));
+  min-width:48px;
+  min-height:48px;
+  padding:0;
+  border:0;
+  background:none;
+  cursor:pointer;
+}
+/*
+  Bulb parts, measured from the design's own insets rather than by eye. Within
+  the 116 x 99 badge: the filament glass occupies 27.5%,16.2% at 56.4% x 53.5%
+  and the base 39.9%,30.6% at 30.4% x 51.2%. The design paints the base first
+  and the glass over it, so the markup keeps that order.
+*/
+/*
+  Bulb parts in design units, so each SVG renders at its own drawn size instead
+  of a percentage that quietly changes its aspect. Offsets are measured from
+  the badge origin (47.556, 963) in the design frame. The design paints the
+  base first and the glass over it, so the markup keeps that order.
+*/
+.hud-hint img{ position:absolute; display:block; }
+.hud-hint-ring{ inset:0; width:100%; height:100%; }
+.hud-hint-base{
+  left:calc(46.2 * var(--hud-u));
+  top:calc(30.3 * var(--hud-u));
+  width:calc(35.376 * var(--hud-u));
+  height:calc(52.025 * var(--hud-u));
+}
+.hud-hint-glass{
+  left:calc(30.5 * var(--hud-u));
+  top:calc(14.6 * var(--hud-u));
+  width:calc(68.196 * var(--hud-u));
+  height:calc(55.713 * var(--hud-u));
+}
+/*
+  The bulb is help, so it is not on screen until the learner has actually got
+  something wrong twice on this activity. Opacity only — GSAP owns `transform`.
+*/
+.hud-hint{
+  transition:opacity .32s var(--ease-out), visibility .32s;
+}
+.hud-hint.is-idle{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+.hud-hint:focus-visible{ outline:3px solid #fff; outline-offset:3px; border-radius:50%; }
+
+/*
+  Primary action — design 480.5 x 122 at 738,916, centred on the frame.
+  The plate is the exported SVG so the angled silhouette and its white stroke
+  stay exactly as drawn; the label and screws sit on top of it.
+*/
+.hud-cta{
+  position:absolute;
+  left:0;
+  right:0;
+  margin-inline:auto;      /* centred without a transform — GSAP owns that */
+  bottom:calc(64 * var(--hud-u));
+  width:calc(480.5 * var(--hud-u));
+  height:calc(122 * var(--hud-u));
+  min-height:52px;
+  padding:0 calc(58 * var(--hud-u));
+  border:0;
+  background:none;
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  filter:drop-shadow(0 calc(10 * var(--hud-u)) calc(22 * var(--hud-u)) rgba(0,0,0,.42));
+}
+
+/*
+  The plate is drawn 475.7 x 135.1 for a 480.5 x 122 box — its 6.91 stroke
+  bleeds above and below. Painting it as a background sized to the box would
+  squash it ~10%, so it gets the design's own inset instead.
+*/
+.hud-cta::before{
+  content:"";
+  position:absolute;
+  inset:-5.09% 0.78% -5.66% 0.21%;
+  background:url("../assets/ui/hud/cta-plate.svg") center/100% 100% no-repeat;
+  pointer-events:none;
+}
+
+.hud-cta-label{
+  position:relative;   /* above the plate painted by ::before */
+  font-family:var(--font-hud);
+  font-weight:700;
+  font-size:calc(34 * var(--hud-u));
+  line-height:1.05;
+  letter-spacing:.01em;
+  color:#fff;
+  text-align:center;
+  overflow-wrap:anywhere;
+}
+
+/* Long labels from later screens must not spill past the angled plate. */
+.hud-cta-label:is(.is-long){ font-size:calc(26 * var(--hud-u)); }
+
+.hud-screw{
+  position:absolute;
+  z-index:1;
+  width:calc(14.77 * var(--hud-u));
+  height:calc(15.987 * var(--hud-u));
+  display:block;
+  pointer-events:none;
+}
+.hud-screw--tl{ left:calc(54 * var(--hud-u)); top:calc(12 * var(--hud-u)); }
+.hud-screw--tr{ right:calc(38 * var(--hud-u)); top:calc(20 * var(--hud-u)); }
+.hud-screw--bl{ left:calc(20 * var(--hud-u)); bottom:calc(11 * var(--hud-u)); }
+.hud-screw--br{ right:calc(24 * var(--hud-u)); bottom:calc(11 * var(--hud-u)); }
+
+/*
+  The design only ever draws this plate active, and it is now the most
+  prominent thing on screen — a permanently greyed one reads as broken. On
+  screens whose action lives inside the panel there is nothing for it to do,
+  so it steps out instead of sitting there dead.
+  Opacity only: GSAP owns `transform` on this element.
+*/
+.hud-cta.is-idle{
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+.hud-cta{
+  transition:opacity .28s var(--ease-out), visibility .28s;
+}
+.hud-cta:focus-visible{ outline:3px solid #fff; outline-offset:4px; }
+
+
+/* =========================================================
+   Short and narrow landscape screens
+   ========================================================= */
+
+@media (max-width:980px){
+  /* The ladder would eat too much of a small screen's width. */
+  .hud-progress{ width:calc(70 * var(--hud-u)); }
+  :root{ --game-right-safe-width:calc(86 * var(--hud-u)); }
+  .hud-topright-rail{ display:none; }
+}
+
+@media (max-width:760px){
+  .hud-brand-word{ display:none; }
+  .hud-brand{ width:calc(170 * var(--hud-u)); }
+  .hud-brand-plate{ object-fit:cover; object-position:left center; }
+  .hud-rail--left,
+  .hud-rail--right,
+  .hud-rail-bar,
+  .hud-chevron{ display:none; }
+  .hud-cta{ width:min(calc(480.5 * var(--hud-u)), 74vw); }
+}

@@ -135,3 +135,25 @@
     font-size:clamp(.66rem,1.5vh,.85rem);
   }
 }
+
+
+/* =========================================================
+   Very short landscape: keep the build slots clear of the HUD
+
+   At 640x360 the bottom-nav safe band starts around y=311 while the third
+   drop slot's centre sat at y=314, so the slot could not be clicked and the
+   build could not be completed. The device content simply sits too low once
+   every layer's padding is added up.
+
+   Trimming the detector illustration inside the device lifts the slot tray
+   clear of the band. Scoped to very short viewports so nothing else moves.
+   ========================================================= */
+
+@media (max-height:430px){
+  #app:not(.is-pre-game) #scene-chunk4 .mission-phone-screen > img{
+    max-height:clamp(52px, 21vh, 92px);
+  }
+  #app:not(.is-pre-game) #scene-chunk4 .detector-load-slot{
+    min-height:clamp(30px, 9vh, 42px);
+  }
+}

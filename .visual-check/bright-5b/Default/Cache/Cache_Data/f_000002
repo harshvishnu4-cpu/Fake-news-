@@ -1,0 +1,548 @@
+/* =========================================================
+   GAMEPLAY POLISH — layout fit, affordances and GSAP support
+   Loaded after styles.css. Everything here is an override, so the
+   original stylesheet stays readable and this file stays reviewable.
+
+   Three sections:
+     A. Fit the playfield        — nothing clipped at 1024x576 or 1280x720
+     B. Clearer play affordances — what is tappable, what is left to do
+     C. Motion support           — surfaces GSAP animates, plus its effects
+   ========================================================= */
+
+
+/* =========================================================
+   A. FIT THE PLAYFIELD
+   The stage sits between the fixed header and the fixed Back/Next bar.
+   Every activity gets the same two numbers so no panel can guess wrong.
+   ========================================================= */
+
+:root{
+  /* Usable height between the game header and the bottom navigation. */
+  --fnd-stage-height:calc(100vh - var(--game-header-safe-height) - var(--game-bottom-nav-safe-height));
+  /* What is left after the mission title row, the workspace gap and padding. */
+  --fnd-play-height:calc(var(--fnd-stage-height) - 84px);
+}
+
+@media (max-height:620px){
+  :root{ --fnd-play-height:calc(var(--fnd-stage-height) - 72px); }
+}
+
+#app:not(.is-pre-game) .mission-workspace > *{
+  min-height:0;
+}
+
+/* The activity row must never be taller than the space it was given. */
+#app:not(.is-pre-game) .mission-two-col,
+#app:not(.is-pre-game) .final-case-layout,
+#app:not(.is-pre-game) .detector-builder-layout{
+  max-height:var(--fnd-play-height);
+  min-height:0;
+}
+
+#app:not(.is-pre-game) .mission-two-col > *,
+#app:not(.is-pre-game) .final-case-layout > *,
+#app:not(.is-pre-game) .detector-builder-layout > *{
+  min-height:0;
+}
+
+/* The phone was fixed at 550px and ran under the Back/Next bar on a 720p
+   screen. It now scales with the playfield instead. */
+#app:not(.is-pre-game) .mission-phone{
+  height:min(520px, var(--fnd-play-height));
+  max-height:var(--fnd-play-height);
+  min-height:300px;
+  align-self:center;
+}
+
+/* Panels sized by a hard min-height used to clip their own footer — Byte's
+   line in the clue hunt, the RUN ALL 5 button in the retest. Let them use the
+   real height instead, and scroll inside if a long state needs it. */
+#app:not(.is-pre-game) .clue-hunt-panel,
+#app:not(.is-pre-game) .detector-test-panel,
+#app:not(.is-pre-game) .final-decision-panel,
+#app:not(.is-pre-game) .detector-rule-panel,
+#app:not(.is-pre-game) .detector-core-panel,
+#app:not(.is-pre-game) .mission-action-panel,
+#app:not(.is-pre-game) .process-order-panel{
+  min-height:0;
+  max-height:var(--fnd-play-height);
+}
+
+@media (min-width:821px){
+  #app:not(.is-pre-game) .clue-hunt-panel,
+  #app:not(.is-pre-game) .detector-test-panel,
+  #app:not(.is-pre-game) .final-decision-panel,
+  #app:not(.is-pre-game) .detector-rule-panel{
+    overflow-y:auto;
+    overflow-x:hidden;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(63,214,255,.4) transparent;
+  }
+}
+
+/*
+  The V2 upgrade panel was missing from that list, so on a short display its
+  fifth slot was cut off by the panel's own overflow:hidden with no way to
+  reach it (33px lost at 1024x576 — the slot's label was simply gone).
+
+  Scoped to chunk 6 on purpose: the identically-named panel in chunk 4 holds
+  the device, whose artwork carries transparent padding that is meant to fall
+  outside the panel. Letting that one scroll would put a scrollbar on empty
+  pixels.
+*/
+#app:not(.is-pre-game) #scene-chunk6 .detector-core-panel{
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(63,214,255,.4) transparent;
+}
+
+/*
+  Scrolling alone is a poor answer here, because the slot that fell below the
+  fold is a drag-and-drop target. At 1024x576 the panel needs 409px for a
+  365px box: illustration 145 + gap 8 + slots 236 + padding 20. Trimming the
+  illustration recovers the 44px so everything fits without scrolling, and the
+  rule above stays as a safety net for sizes this does not cover.
+*/
+@media (max-height:660px){
+  #app:not(.is-pre-game) #scene-chunk6 .detector-core-panel > img{
+    max-height:clamp(78px, 17vh, 118px);
+  }
+}
+
+#app:not(.is-pre-game) .glass-panel::-webkit-scrollbar{ width:7px; }
+#app:not(.is-pre-game) .glass-panel::-webkit-scrollbar-track{ background:transparent; }
+#app:not(.is-pre-game) .glass-panel::-webkit-scrollbar-thumb{
+  border-radius:999px;
+  background:rgba(63,214,255,.32);
+}
+
+/* Single-panel activities (the V1 report, the upgrade choice, the process
+   order, the completion card) had no height ceiling at all. At 1024x576 that
+   pushed "CHECK MY CHOICE" clean off the bottom of the screen — a dead end
+   with no way forward. Give every one of them the same ceiling and let the
+   body scroll under a pinned primary action. */
+#app:not(.is-pre-game) .mission-workspace > .glass-panel{
+  max-height:var(--fnd-play-height);
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(63,214,255,.4) transparent;
+}
+
+/* On a viewport short enough that a panel still has to scroll, the pinned
+   action needs to sit on something — otherwise it floats over the text. */
+#app:not(.is-pre-game) .mission-workspace > .glass-panel > .btn-primary,
+#app:not(.is-pre-game) .detector-test-panel > .btn-primary,
+#app:not(.is-pre-game) .final-decision-panel > .btn-primary,
+#app:not(.is-pre-game) .detector-rule-panel > .btn-primary{
+  position:sticky;
+  bottom:0;
+  z-index:4;
+  flex:0 0 auto;
+  box-shadow:0 -6px 14px 5px rgba(9,16,40,.7), 0 10px 30px rgba(63,214,255,.35);
+}
+
+/* Short landscape screens: trim the upgrade choice so it fits without scrolling. */
+@media (max-height:660px){
+  .distractor-upgrade-panel{ gap:6px; padding:9px 14px; }
+  .distractor-upgrade-panel .upgrade-byte-guidance{ min-height:40px; }
+  .distractor-upgrade-panel .upgrade-byte-guidance .byte-mini-figure{
+    width:40px; min-height:40px; flex-basis:40px;
+  }
+  .distractor-upgrade-panel .upgrade-byte-guidance .byte-line-panel{
+    min-height:40px; padding:6px 9px;
+  }
+  .distractor-upgrade-panel .upgrade-byte-guidance .byte-line-panel p{
+    font-size:.74rem; line-height:1.2;
+  }
+  .distractor-option-grid{ gap:8px; }
+  .distractor-option-grid .upgrade-option-card{ min-height:54px; padding:6px 10px; }
+  .distractor-upgrade-panel .upgrade-choice-feedback{ min-height:38px; padding:6px 10px; }
+  .distractor-upgrade-panel .v1-check-strip{ min-height:36px; }
+
+  /* V1 test report: the big score number and poster do not need full size. */
+  .v1-three-report{ gap:10px; padding:14px 18px; }
+  .v1-three-report .report-score strong{ font-size:2.8rem; }
+  .v1-three-report .report-failure-card{ padding:10px; gap:14px; grid-template-columns:140px 1fr; }
+  .v1-three-report .claim-poster{ width:130px; min-height:112px; border-radius:16px; }
+  .v1-three-report .claim-poster span{ font-size:2.8rem; }
+  .v1-three-report .claim-poster b{ font-size:.78rem; }
+  .v1-three-report .report-failure-card h3{ font-size:1.3rem; margin:4px 0; }
+  .v1-three-report .report-failure-card p{ font-size:.82rem; }
+}
+
+/* Mission complete: the badge, three score cards and the recap overran the
+   panel by just enough that the pinned FINISH MISSION button covered the recap
+   line. Trim the celebration rather than hide the last sentence of it. */
+#app:not(.is-pre-game) .score-completion-panel{
+  gap:10px;
+  padding:16px 24px;
+}
+#app:not(.is-pre-game) .score-completion-panel .completion-badge{
+  width:88px;
+  height:88px;
+}
+#app:not(.is-pre-game) .score-completion-panel .completion-badge svg{
+  width:40px;
+  height:40px;
+}
+#app:not(.is-pre-game) .score-completion-panel .completion-score-card{
+  min-height:88px;
+}
+
+@media (max-height:660px){
+  #app:not(.is-pre-game) .score-completion-panel{ gap:7px; padding:12px 18px; }
+  #app:not(.is-pre-game) .score-completion-panel .completion-badge{ width:64px; height:64px; }
+  #app:not(.is-pre-game) .score-completion-panel .completion-badge svg{ width:30px; height:30px; }
+  #app:not(.is-pre-game) .score-completion-panel .completion-badge span{ font-size:.55rem; }
+  #app:not(.is-pre-game) .score-completion-panel h3{ font-size:clamp(1.4rem,3vw,1.9rem); }
+  #app:not(.is-pre-game) .score-completion-panel .completion-message{ font-size:.86rem; }
+  #app:not(.is-pre-game) .score-completion-panel .completion-score-grid{ gap:9px; }
+  #app:not(.is-pre-game) .score-completion-panel .completion-score-card{ min-height:68px; }
+  #app:not(.is-pre-game) .score-completion-panel .completion-score-card strong{ font-size:1.7rem; }
+  #app:not(.is-pre-game) .score-completion-panel .completion-score-card small{ font-size:.72rem; }
+  #app:not(.is-pre-game) .score-completion-panel .completion-recap{ padding:6px 12px; }
+}
+
+/* The retest screen asked for 100vh-104px, roughly 130px more than exists. */
+.retest-layout-fixed{
+  height:auto;
+  max-height:var(--fnd-play-height);
+}
+.retest-panel-fixed{
+  max-height:var(--fnd-play-height);
+}
+
+/* Build V1: the slot tray is part of the detector, but a 1fr image row left a
+   wide gap between them and pinned the tray to the panel floor. Size both rows
+   to their content and centre the pair. */
+#scene-chunk4 .detector-core-panel{
+  grid-template-rows:auto auto;
+  align-content:center;
+  gap:clamp(10px,1.8vh,18px);
+}
+#scene-chunk4 .detector-core-panel > img{
+  height:auto;
+  max-height:min(260px, calc(var(--fnd-play-height) - 160px));
+}
+#scene-chunk4 .detector-load-slots{
+  align-self:auto;
+}
+
+/* "START FINAL MISSION" wrapped onto two lines and pushed the panel down. */
+#app:not(.is-pre-game) .compact-btn{
+  white-space:nowrap;
+}
+
+
+/* =========================================================
+   B. CLEARER PLAY AFFORDANCES
+   ========================================================= */
+
+/*
+  Each screen moves focus to its heading so a screen reader announces the new
+  step. Those headings carry tabindex="-1", so the browser drew its default
+  focus ring around the title — a box around "Find the Red Flags" that looked
+  like a stray border. A tabindex="-1" element is not Tab-reachable, so no
+  keyboard user can land here and need the indicator; the announcement is kept,
+  the ring is not. Real controls keep their focus ring untouched.
+*/
+[data-autofocus][tabindex="-1"]:focus,
+[data-autofocus][tabindex="-1"]:focus-visible{
+  outline:none;
+}
+
+
+/* --- Clue hunt: show the three empty slots from the start ---------------
+   A blank "No clues found yet." board hid the goal. Three labelled, locked
+   slots make the target obvious and give each unlock somewhere to land. */
+
+/* Three slots, a flash, a progress bar and Byte all have to fit the panel at
+   720p, so the slots run a little shorter than the old two-state board. */
+.clue-hunt-panel{
+  gap:10px;
+  padding:clamp(10px,2vh,20px);
+}
+#app:not(.is-pre-game) .clue-hunt-panel h3{
+  font-size:clamp(1.4rem,2.2vw,1.9rem);
+}
+.unlock-stack{
+  gap:8px;
+}
+.unlock-stack:not(.is-complete) .unlock-slot{
+  min-height:68px;
+}
+
+/* Title, flash, progress bar and Byte all have to stay on screen. The board
+   is the only part that can give, so it absorbs the squeeze — never Byte. */
+/*
+  Three zones, top to bottom: the heading with its progress bar, the clue board,
+  and Byte's line anchored to the floor. The board used to be flex:1, which left
+  a void between the last clue and everything under it — it now sizes to its
+  content and Byte holds the bottom edge, so the breathing room sits in one
+  deliberate place instead of opening a hole mid-panel.
+*/
+.clue-hunt-head{
+  display:flex;
+  flex-direction:column;
+  gap:clamp(6px,1.1vh,10px);
+  flex:0 0 auto;
+}
+.clue-hunt-head h3{ margin:0; }
+
+@media (min-width:821px){
+  #app:not(.is-pre-game) .clue-hunt-panel{
+    overflow:hidden;
+  }
+  #app:not(.is-pre-game) .clue-hunt-panel > .unlock-stack:not(.is-complete){
+    flex:0 1 auto;
+    min-height:0;
+    overflow-y:auto;
+    scrollbar-width:thin;
+    scrollbar-color:rgba(63,214,255,.4) transparent;
+  }
+  #app:not(.is-pre-game) .clue-hunt-panel > .clue-hunt-head,
+  #app:not(.is-pre-game) .clue-hunt-panel > .clue-hunt-goal,
+  #app:not(.is-pre-game) .clue-hunt-panel > .unlock-flash,
+  #app:not(.is-pre-game) .clue-hunt-panel > .byte-mini{
+    flex:0 0 auto;
+  }
+  /* Byte anchors the panel floor. */
+  #app:not(.is-pre-game) .clue-hunt-panel > .byte-mini{
+    margin-top:auto;
+  }
+}
+
+/*
+  The finished state is a confirmation, not a worklist: heading plus three
+  unlocked checks and nothing else. Top-aligning that left a tall empty well
+  under the cards, so it centres instead — and centres at every size, which it
+  previously only did on wider screens.
+*/
+#app:not(.is-pre-game) .clue-hunt-panel.is-complete{
+  justify-content:center;
+  gap:clamp(12px,2.2vh,20px);
+}
+
+/* Short landscape screens (1024x576 and similar tablets). */
+@media (max-height:660px){
+  .clue-hunt-panel{ gap:7px; padding:10px 12px; }
+  #app:not(.is-pre-game) .clue-hunt-panel h3{ font-size:clamp(1.05rem,2.7vh,1.45rem); }
+  .clue-hunt-goal{ font-size:.78rem; }
+  .clue-hunt-goal b{ min-width:26px; height:22px; }
+  .unlock-stack{ gap:6px; }
+  .unlock-stack:not(.is-complete) .unlock-slot{
+    min-height:52px;
+    padding:6px 10px;
+    grid-template-columns:38px 1fr;
+    gap:9px;
+  }
+  .unlock-stack:not(.is-complete) .unlock-icon{ width:36px; height:36px; border-radius:11px; }
+  .unlock-stack:not(.is-complete) .unlock-icon svg{ width:20px; height:20px; }
+  .unlock-stack:not(.is-complete) .unlock-slot strong{ font-size:.82rem; }
+  .unlock-stack:not(.is-complete) .unlock-slot small{ font-size:.65rem; }
+  .unlock-flash{ min-height:36px; }
+  .unlock-flash strong{ font-size:.78rem; }
+  .clue-byte-panel .byte-mini-figure{ width:44px; min-height:44px; flex-basis:44px; }
+  .clue-byte-panel .byte-line-panel{ min-height:44px; padding:7px 10px; }
+  .clue-byte-panel .byte-line-panel p{ font-size:.8rem; line-height:1.22; }
+}
+.unlock-slot.is-locked{
+  opacity:.5;
+  border-style:dashed;
+}
+.unlock-slot.is-locked .unlock-icon{
+  background:rgba(246,249,255,.06);
+  color:rgba(246,249,255,.35);
+}
+.unlock-slot.is-locked strong{
+  color:rgba(246,249,255,.6);
+  letter-spacing:.06em;
+}
+.unlock-slot.is-locked small{
+  color:rgba(246,249,255,.34);
+}
+
+.clue-hunt-goal{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin:0;
+  font-size:var(--font-xs);
+  color:var(--ink-dim);
+}
+.clue-hunt-goal b{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:30px;
+  height:26px;
+  padding:0 8px;
+  border-radius:999px;
+  background:rgba(63,214,255,.14);
+  border:1px solid rgba(63,214,255,.4);
+  color:var(--cyan-300);
+  font-family:var(--font-display);
+}
+
+/* A tappable line in the message should look tappable before it is tapped. */
+.hunt-clue:not(.is-found){
+  cursor:pointer;
+}
+.hunt-clue:not(.is-found):hover,
+.hunt-clue:not(.is-found):focus-visible{
+  border-style:solid;
+  border-color:rgba(20,120,160,.55);
+}
+.hunt-source:not(.is-found){
+  background:rgba(255,255,255,.12);
+  border:1px dashed rgba(255,255,255,.4);
+}
+.hunt-source:not(.is-found):hover{
+  background:rgba(255,255,255,.2);
+}
+.hunt-clue.is-wrong{
+  border-color:rgba(255,110,90,.75) !important;
+  background:rgba(255,110,90,.16) !important;
+}
+
+/* Build V1: an empty slot should read as a destination, not decoration. */
+.detector-load-slot.is-empty-drop{
+  border:2px dashed rgba(63,214,255,.35);
+  transition:border-color .2s, background .2s;
+}
+.detector-load-slot.is-tap-target{
+  border-color:var(--lime-400);
+  background:rgba(166,255,107,.12);
+}
+.detector-load-slot.is-drop-hover{
+  border-color:var(--cyan-300);
+  background:rgba(63,214,255,.18);
+}
+
+/* Scanning: the row being checked should be unmistakable. */
+.scan-result-row.is-current-check,
+.mini-check-result.is-scanning-now{
+  border-color:rgba(63,214,255,.7) !important;
+  background:rgba(63,214,255,.14) !important;
+}
+.mini-check-result.is-scanning-now b{
+  color:var(--cyan-300);
+}
+
+/* Feedback blocks carry the mission's most important sentences. */
+.inline-feedback.is-correct,
+.inline-feedback.is-retry{
+  box-shadow:0 8px 26px rgba(0,0,0,.28);
+}
+
+/* Header Next: when it becomes available it is the only way forward. */
+.bottom-nav-next:not([disabled]){
+  box-shadow:0 10px 30px rgba(63,214,255,.32);
+}
+
+
+/* =========================================================
+   C. MOTION SUPPORT
+   GSAP writes inline transforms. A CSS animation with `both` fill outranks
+   inline style, so the few decorative keyframes that also animate transform
+   are switched off while the motion layer is running.
+   ========================================================= */
+
+/* GSAP drives the incoming screen, so the outgoing one only has to clear out
+   of the way — 550ms of CSS fade on top of that reads as a lag. */
+body.fnd-motion{
+  --dur-scene:300ms;
+}
+
+body.fnd-motion .unlock-slot.is-unlocked,
+body.fnd-motion .unlock-flash,
+body.fnd-motion .five-scan-card.is-open,
+body.fnd-motion .repair-probe.is-revealed{
+  animation:none;
+}
+
+/*
+  There used to be a `transform:none` override here on :hover/:active, meant to
+  stop the CSS lift fighting GSAP. It was both unnecessary and harmful.
+
+  Unnecessary: GSAP writes an *inline* transform, which already outranks any
+  stylesheet rule, so it was never in a fight.
+
+  Harmful: some buttons use `transform` for layout, not decoration. The landing
+  screen's START MISSION is `position:absolute; left:50%; transform:translateX(-50%)`,
+  and its own :hover rule correctly re-states that centring. This override
+  outranked it and flattened the transform to none, so the button jumped 205px
+  to the right the instant the pointer touched it — moving out from under the
+  click. GSAP composes correctly with a layout transform on its own
+  (translate(-50%) translate(0,-3px) scale(1.03)), so the right fix is to stay
+  out of the way.
+*/
+
+body.fnd-motion .btn-primary,
+body.fnd-motion .choice-card{
+  transition:box-shadow var(--dur-button), border-color .18s, background .18s;
+}
+
+/* Tap ripple ------------------------------------------------------------ */
+.fnd-ripple-host{
+  position:relative;
+  overflow:hidden;
+}
+.fnd-ripple{
+  position:absolute;
+  border-radius:50%;
+  pointer-events:none;
+  background:radial-gradient(circle, rgba(255,255,255,.75), rgba(255,255,255,0) 70%);
+  z-index:2;
+}
+.btn-primary .fnd-ripple{
+  background:radial-gradient(circle, rgba(7,12,31,.45), rgba(7,12,31,0) 70%);
+}
+
+/* Spark burst and confetti --------------------------------------------- */
+.fnd-fx-layer{
+  position:fixed;
+  inset:0;
+  z-index:80;
+  pointer-events:none;
+  overflow:hidden;
+}
+.fnd-spark{
+  position:absolute;
+  width:9px;
+  height:9px;
+  margin:-4.5px 0 0 -4.5px;
+  border-radius:50%;
+  will-change:transform,opacity;
+}
+.fnd-confetti{
+  position:absolute;
+  width:9px;
+  height:15px;
+  border-radius:2px;
+  will-change:transform,opacity;
+}
+
+/* Scan sweep across the phone while the detector runs ------------------- */
+.fnd-scan-beam{
+  position:absolute;
+  left:0;
+  right:0;
+  top:0;
+  height:16%;
+  z-index:9;
+  pointer-events:none;
+  background:linear-gradient(180deg, rgba(63,214,255,0), rgba(63,214,255,.4), rgba(63,214,255,0));
+  box-shadow:0 0 26px rgba(63,214,255,.5);
+}
+
+/* With reduced motion the effects layer never renders anything, but make the
+   intent explicit so nothing can leak in. */
+@media (prefers-reduced-motion:reduce){
+  .fnd-fx-layer,
+  .fnd-scan-beam,
+  .fnd-ripple{ display:none !important; }
+}

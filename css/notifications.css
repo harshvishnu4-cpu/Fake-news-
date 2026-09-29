@@ -16,15 +16,21 @@
    ========================================================= */
 
 
-/* ---------- Panel hugs its content ----------
-   .mission-two-col stretches its children, which is what created the void.
-   Centring the panel and letting it size to content removes it without
-   touching the device column. */
+/* ---------- Panel fills its cell ----------
+   This panel used to hug its content, because a short content block left a
+   ~200px void inside a stretched panel. The screen's copy has since grown
+   (kicker, progress row, per-clue prompts) and the content now measures 475
+   of the row's 497px, so the void is gone.
+
+   Hugging is therefore no longer worth its cost: it made this column a
+   different height from the device plate beside it, so the two halves of the
+   screen visibly failed to line up. Stretching both makes them align by
+   construction, and the 22px of slack is spread rather than pooled. */
 #app:not(.is-pre-game) .clue-hunt-panel{
-  align-self:center;
-  height:auto;
+  align-self:stretch;
+  height:100%;
   max-height:100%;
-  justify-content:center;
+  justify-content:space-between;
   gap:clamp(10px,1.6vh,16px);
 }
 
